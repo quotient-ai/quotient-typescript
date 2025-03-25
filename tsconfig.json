@@ -15,6 +15,6 @@
       "*": ["node_modules/*"]
     }
   },
-  "include": ["quotientai/src/**/*"],
+  "include": ["quotientai/src/**/*", "quotientai/resources", "quotientai/client.ts", "quotientai/errors.ts", "quotientai/index.ts", "quotientai/logger.ts", "quotientai/types.ts"],
   "exclude": ["node_modules", "dist"]
 } 

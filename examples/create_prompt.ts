@@ -1,4 +1,4 @@
-import { QuotientAI } from '../quotientai/src';
+import { QuotientAI } from '../quotientai';
 
 // Helper function to generate random text
 function generateRandomText(length: number = 10): string {
@@ -14,11 +14,11 @@ async function main() {
   const quotient = new QuotientAI();
 
   // Create a new prompt
-  const newPrompt = await quotient.prompts.create({
-    name: generateRandomText(10),
-    system_prompt: generateRandomText(100),
-    user_prompt: generateRandomText(100)
-  });
+  const newPrompt = await quotient.prompts.create(
+    generateRandomText(10),  // name
+    generateRandomText(100), // system_prompt
+    generateRandomText(100)  // user_prompt
+  );
 
   console.log(newPrompt);
 }

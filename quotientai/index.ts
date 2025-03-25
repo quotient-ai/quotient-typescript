@@ -2,15 +2,22 @@ import { BaseQuotientClient } from './client';
 import { QuotientLogger } from './logger';
 import { Prompt, Model, Dataset } from './types';
 import { Run } from './resources/runs';
+import { AuthResource } from './resources/auth';
+import { PromptsResource } from './resources/prompts';
+import { DatasetsResource } from './resources/datasets';
+import { ModelsResource } from './resources/models';
+import { RunsResource } from './resources/runs';
+import { MetricsResource } from './resources/metrics';
+import { LogsResource } from './resources/logs';
 
 export class QuotientAI {
-  public auth: any; // Replace with proper AuthResource type
-  public prompts: any; // Replace with proper PromptsResource type
-  public datasets: any; // Replace with proper DatasetsResource type
-  public models: any; // Replace with proper ModelsResource type
-  public runs: any; // Replace with proper RunsResource type
-  public metrics: any; // Replace with proper MetricsResource type
-  public logs: any; // Replace with proper LogsResource type
+  public auth: AuthResource;
+  public prompts: PromptsResource;
+  public datasets: DatasetsResource;
+  public models: ModelsResource;
+  public runs: RunsResource;
+  public metrics: MetricsResource;
+  public logs: LogsResource;
   public logger: QuotientLogger;
 
   constructor(apiKey?: string) {
@@ -26,13 +33,13 @@ export class QuotientAI {
     const client = new BaseQuotientClient(key);
     
     // Initialize resources
-    this.auth = new (require('./resources/auth').AuthResource)(client);
-    this.prompts = new (require('./resources/prompts').PromptsResource)(client);
-    this.datasets = new (require('./resources/datasets').DatasetsResource)(client);
-    this.models = new (require('./resources/models').ModelsResource)(client);
-    this.runs = new (require('./resources/runs').RunsResource)(client);
-    this.metrics = new (require('./resources/metrics').MetricsResource)(client);
-    this.logs = new (require('./resources/logs').LogsResource)(client);
+    this.auth = new AuthResource(client);
+    this.prompts = new PromptsResource(client);
+    this.datasets = new DatasetsResource(client);
+    this.models = new ModelsResource(client);
+    this.runs = new RunsResource(client);
+    this.metrics = new MetricsResource(client);
+    this.logs = new LogsResource(client);
 
     // Authenticate
     this.auth.authenticate();
@@ -63,12 +70,6 @@ export class QuotientAI {
       );
     }
 
-    return this.runs.create({
-      prompt,
-      dataset,
-      model,
-      parameters,
-      metrics,
-    });
+    return this.runs.create(prompt, dataset, model, parameters, metrics);
   }
 } 
