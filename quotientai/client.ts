@@ -32,7 +32,7 @@ export class BaseQuotientClient {
 
     // Initialize axios instance
     this.client = axios.create({
-      baseURL: 'https://staging-api.quotientai.co/api/v1',
+      baseURL: 'https://api.quotientai.co/api/v1',
       headers: {
         Authorization: `Bearer ${apiKey}`
       }
