@@ -1,6 +1,7 @@
 import { BaseQuotientClient } from './client';
 import { QuotientLogger } from './logger';
-import { Prompt, Model, Dataset, Run } from './types';
+import { Prompt, Model, Dataset } from './types';
+import { Run } from './resources/runs';
 
 export class QuotientAI {
   public auth: any; // Replace with proper AuthResource type

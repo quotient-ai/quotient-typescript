@@ -65,10 +65,15 @@ export interface DatasetRow {
   updated_at: Date;
 }
 
-export interface Run {
+export interface RunResult {
   id: string;
-  status: string;
-  // Add other run properties as needed
+  input: string;
+  output: string;
+  values: Record<string, any>;
+  created_at: Date;
+  created_by: string;
+  context: string;
+  expected: string;
 }
 
 export interface LogEntry {
