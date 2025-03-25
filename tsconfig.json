@@ -13,8 +13,9 @@
     "baseUrl": ".",
     "paths": {
       "*": ["node_modules/*"]
-    }
+    },
+    "types": ["vitest/globals"]
   },
-  "include": ["quotientai/src/**/*", "quotientai/resources", "quotientai/client.ts", "quotientai/errors.ts", "quotientai/index.ts", "quotientai/logger.ts", "quotientai/types.ts"],
+  "include": ["quotientai/**/*", "tests/**/*"],
   "exclude": ["node_modules", "dist"]
 } 

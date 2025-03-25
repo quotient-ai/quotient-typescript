@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { TokenData } from './types';
-import { QuotientAIError } from './errors';
+import { QuotientAIError } from './exceptions';
 
 export class BaseQuotientClient {
   private apiKey: string;
