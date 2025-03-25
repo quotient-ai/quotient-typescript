@@ -25,7 +25,12 @@ export class PromptsResource {
 
     for (const prompt of response) {
       prompts.push({
-        ...prompt,
+        id: prompt.id,
+        name: prompt.name,
+        content: prompt.content,
+        version: prompt.version,
+        system_prompt: prompt.system_prompt,
+        user_prompt: prompt.user_prompt,
         created_at: new Date(prompt.created_at),
         updated_at: new Date(prompt.updated_at)
       });
@@ -40,7 +45,12 @@ export class PromptsResource {
     }
     const response = await this.client.get(path) as PromptResponse;
     return {
-      ...response,
+      id: response.id,
+      name: response.name,
+      content: response.content,
+      version: response.version,
+      system_prompt: response.system_prompt,
+      user_prompt: response.user_prompt,
       created_at: new Date(response.created_at),
       updated_at: new Date(response.updated_at)
     };
@@ -53,7 +63,12 @@ export class PromptsResource {
       user_prompt
     }) as PromptResponse;
     return {
-      ...response,
+      id: response.id,
+      name: response.name,
+      content: response.content,
+      version: response.version,
+      system_prompt: response.system_prompt,
+      user_prompt: response.user_prompt,
       created_at: new Date(response.created_at),
       updated_at: new Date(response.updated_at)
     };
@@ -66,13 +81,24 @@ export class PromptsResource {
       user_prompt: prompt.user_prompt
     }) as PromptResponse;
     return {
-      ...response,
+      id: response.id,
+      name: response.name,
+      content: response.content,
+      version: response.version,
+      system_prompt: response.system_prompt,
+      user_prompt: response.user_prompt,
       created_at: new Date(response.created_at),
       updated_at: new Date(response.updated_at)
     };
   }
 
   async deletePrompt(prompt: Prompt): Promise<void> {
-    await this.client.delete(`/prompts/${prompt.id}`);
+    await this.client.patch(`/prompts/${prompt.id}`, {
+      id: prompt.id,
+      name: prompt.name,
+      system_prompt: prompt.system_prompt,
+      user_prompt: prompt.user_prompt,
+      is_deleted: true
+    });
   }
 }
