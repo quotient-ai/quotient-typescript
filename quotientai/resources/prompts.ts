@@ -1,4 +1,3 @@
-import { Resource } from './base';
 import { BaseQuotientClient } from '../client';
 import { Prompt } from '../types';
 
@@ -13,9 +12,11 @@ interface PromptResponse {
   updated_at: string;
 }
 
-export class PromptsResource extends Resource {
+export class PromptsResource {
+  protected client: BaseQuotientClient;
+
   constructor(client: BaseQuotientClient) {
-    super(client);
+    this.client = client;
   }
 
   async list(): Promise<Prompt[]> {

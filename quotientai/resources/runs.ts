@@ -1,6 +1,5 @@
 import { BaseQuotientClient } from '../client';
 import { Dataset, Model, Prompt, RunResult } from '../types';
-import { Resource } from './base';
 
 interface RunResponse {
   id: string;
@@ -96,9 +95,11 @@ export class Run {
     }
 }
 
-export class RunsResource extends Resource {
+export class RunsResource {
+    protected client: BaseQuotientClient;
+
     constructor(client: BaseQuotientClient) {
-        super(client);
+        this.client = client;
     }
 
     async list(): Promise<Run[]> {

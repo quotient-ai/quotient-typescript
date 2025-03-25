@@ -1,9 +1,10 @@
-import { Resource } from './base';
 import { BaseQuotientClient } from '../client';
 
-export class AuthResource extends Resource {
+export class AuthResource {
+  protected client: BaseQuotientClient;
+
   constructor(client: BaseQuotientClient) {
-    super(client);
+    this.client = client;
   }
 
   async authenticate(): Promise<any> {

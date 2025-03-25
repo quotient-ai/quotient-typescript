@@ -1,5 +1,4 @@
 import { BaseQuotientClient } from '../client';
-import { Resource } from './base';
 
 interface LogResponse {
     id: string;
@@ -77,13 +76,14 @@ export class Log {
     }
 }
 
-export class LogsResource extends Resource {
+export class LogsResource {
+    protected client: BaseQuotientClient;
     private logQueue: any[] = [];
     private isProcessing: boolean = false;
     private processingInterval: NodeJS.Timeout | null = null;
 
     constructor(client: BaseQuotientClient) {
-        super(client);
+        this.client = client;
         this.startProcessing();
     }
 
@@ -111,8 +111,7 @@ export class LogsResource extends Resource {
         }
     }
 
-    create(params: CreateLogParams): void {
-        // Create is non-blocking, so we add to queue and return immediately
+    async create(params: CreateLogParams): Promise<void> {
         this.logQueue.push(params);
     }
 
@@ -144,7 +143,6 @@ export class LogsResource extends Resource {
         }
     }
 
-    // Cleanup method to stop the processing interval
     cleanup(): void {
         if (this.processingInterval) {
             clearInterval(this.processingInterval);
@@ -153,9 +151,11 @@ export class LogsResource extends Resource {
     }
 }
 
-export class AsyncLogsResource extends Resource {
+export class AsyncLogsResource {
+    protected client: BaseQuotientClient;
+
     constructor(client: BaseQuotientClient) {
-        super(client);
+        this.client = client;
     }
 
     async create(params: CreateLogParams): Promise<void> {

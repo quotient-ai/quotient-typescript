@@ -1,4 +1,3 @@
-import { Resource } from './base';
 import { BaseQuotientClient } from '../client';
 import { Model, ModelProvider } from '../types';
 
@@ -9,9 +8,11 @@ interface ModelResponse {
   created_at: string;
 }
 
-export class ModelsResource extends Resource {
+export class ModelsResource {
+  protected client: BaseQuotientClient;
+
   constructor(client: BaseQuotientClient) {
-    super(client);
+    this.client = client;
   }
 
   async list(): Promise<Model[]> {
