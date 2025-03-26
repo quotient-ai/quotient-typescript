@@ -78,41 +78,18 @@ export class Log {
 
 export class LogsResource {
     protected client: BaseQuotientClient;
-    private logQueue: any[] = [];
-    private isProcessing: boolean = false;
-    private processingInterval: NodeJS.Timeout | null = null;
 
     constructor(client: BaseQuotientClient) {
         this.client = client;
-        this.startProcessing();
-    }
-
-    private startProcessing(): void {
-        this.processingInterval = setInterval(() => {
-            this.processLogQueue();
-        }, 100);
-    }
-
-    private async processLogQueue(): Promise<void> {
-        if (this.isProcessing || this.logQueue.length === 0) {
-            return;
-        }
-
-        this.isProcessing = true;
-        try {
-            const logData = this.logQueue.shift();
-            if (logData) {
-                await this._post_log(logData);
-            }
-        } catch (error) {
-            console.error('Error processing log queue:', error);
-        } finally {
-            this.isProcessing = false;
-        }
     }
 
     async create(params: CreateLogParams): Promise<void> {
-        this.logQueue.push(params);
+        try {
+            await this.client.post('/logs', params);
+        } catch (error) {
+            console.error('Error posting log:', error);
+            // Don't throw the error, just log it
+        }
     }
 
     async list(params: ListLogsParams = {}): Promise<Log[]> {
@@ -122,8 +99,8 @@ export class LogsResource {
         if (params.environment) queryParams.environment = params.environment;
         if (params.start_date) queryParams.start_date = params.start_date.toISOString();
         if (params.end_date) queryParams.end_date = params.end_date.toISOString();
-        if (params.limit) queryParams.limit = params.limit;
-        if (params.offset) queryParams.offset = params.offset;
+        if (params.limit !== undefined) queryParams.limit = params.limit;
+        if (params.offset !== undefined) queryParams.offset = params.offset;
 
         try {
             const response = await this.client.get('/logs', { params: queryParams }) as LogsResponse;
@@ -131,63 +108,6 @@ export class LogsResource {
         } catch (error) {
             console.error('Error listing logs:', error);
             throw error;
-        }
-    }
-
-    private async _post_log(data: Record<string, any>): Promise<void> {
-        try {
-            await this.client.post('/logs', data);
-        } catch (error) {
-            console.error('Error posting log:', error);
-            // Don't throw the error, just log it
-        }
-    }
-
-    cleanup(): void {
-        if (this.processingInterval) {
-            clearInterval(this.processingInterval);
-            this.processingInterval = null;
         }
     }
 }
-
-export class AsyncLogsResource {
-    protected client: BaseQuotientClient;
-
-    constructor(client: BaseQuotientClient) {
-        this.client = client;
-    }
-
-    async create(params: CreateLogParams): Promise<void> {
-        // Create is non-blocking, so we don't wait for the response
-        this._post_log_in_background(params).catch(console.error);
-    }
-
-    async list(params: ListLogsParams = {}): Promise<Log[]> {
-        const queryParams: Record<string, any> = {};
-        
-        if (params.app_name) queryParams.app_name = params.app_name;
-        if (params.environment) queryParams.environment = params.environment;
-        if (params.start_date) queryParams.start_date = params.start_date.toISOString();
-        if (params.end_date) queryParams.end_date = params.end_date.toISOString();
-        if (params.limit) queryParams.limit = params.limit;
-        if (params.offset) queryParams.offset = params.offset;
-
-        try {
-            const response = await this.client.get('/logs', { params: queryParams }) as LogsResponse;
-            return response.logs.map(logData => new Log(logData));
-        } catch (error) {
-            console.error('Error listing logs:', error);
-            throw error;
-        }
-    }
-
-    private async _post_log_in_background(data: Record<string, any>): Promise<void> {
-        try {
-            await this.client.post('/logs', data);
-        } catch (error) {
-            console.error('Error posting log:', error);
-            // Don't throw the error, just log it
-        }
-    }
-} 
