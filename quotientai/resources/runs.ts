@@ -23,10 +23,9 @@ interface RunSummary {
   id: string;
   model: string;
   parameters: Record<string, any>;
-  metrics: Record<string, MetricSummary>;
+  metrics: Record<string, { avg: number; stddev: number }>;
   created_at: Date;
-  best_n?: RunResult[];
-  worst_n?: RunResult[];
+  [key: string]: any;
 }
 
 export class Run {
@@ -102,17 +101,17 @@ export class RunsResource {
         this.client = client;
     }
 
-    async list(): Promise<Run[]> {
+    async list(): Promise<Omit<Run, 'client'>[]> {
         const response = await this.client.get('/runs') as RunResponse[];
         return response.map(runData => new Run(this.client, runData));
     }
 
-    async getRun(run_id: string): Promise<Run> {
+    async get(run_id: string): Promise<Omit<Run, 'client'> | null> {
         const response = await this.client.get(`/runs/${run_id}`) as RunResponse;
         return new Run(this.client, response);
     }
 
-    async create(prompt: Prompt, dataset: Dataset, model: Model, parameters: Record<string, any>, metrics: string[]): Promise<Run> {
+    async create(prompt: Prompt, dataset: Dataset, model: Model, parameters: Record<string, any>, metrics: string[]): Promise<Omit<Run, 'client'> | null> {
         const response = await this.client.post('/runs', {
             prompt_id: prompt.id,
             dataset_id: dataset.id,
@@ -123,7 +122,7 @@ export class RunsResource {
         return new Run(this.client, response);
     }
 
-    async compare(runs: Run[]): Promise<Record<string, any> | null> {
+    async compare(runs: Run[]): Promise<Record<string, any> | null | undefined> {
         if (runs.length <= 1) {
             return null;
         }
@@ -161,7 +160,5 @@ export class RunsResource {
             }
             return comparison;
         }
-        
-        return null;
     }
 }

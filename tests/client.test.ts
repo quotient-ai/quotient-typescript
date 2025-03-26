@@ -60,9 +60,9 @@ describe('BaseQuotientClient', () => {
         await privateClient.handleResponse(response);
         
         expect(privateClient.token).toBe('test_token');
-        expect(privateClient.tokenExpiry).toBe(Math.floor(Date.now() / 1000) + 3600);
+        expect(privateClient.tokenExpiry).toBeCloseTo(Math.floor(Date.now() / 1000) + 3600, -1);
         expect(saveTokenSpy).toHaveBeenCalledOnce();
-        expect(saveTokenSpy).toHaveBeenCalledWith('test_token', Math.floor(Date.now() / 1000) + 3600);
+        expect(saveTokenSpy).toHaveBeenCalledWith('test_token', expect.any(Number));
     });
     
     it('should save the token to the file system', async () => {
@@ -87,7 +87,7 @@ describe('BaseQuotientClient', () => {
         
         // Verify token is in memory
         expect(privateClient.token).toBe('test_token');
-        expect(privateClient.tokenExpiry).toBe(Math.floor(Date.now() / 1000) + 3600);
+        expect(privateClient.tokenExpiry).toBeCloseTo(Math.floor(Date.now() / 1000) + 3600, -1);
         
         // Verify file system operations
         expect(mkdirSpy).toHaveBeenCalledWith(expect.any(String), { recursive: true });

@@ -54,7 +54,7 @@ export class QuotientAI {
     model: Model;
     parameters: Record<string, any>;
     metrics: string[];
-  }): Promise<Run> {
+  }): Promise<Omit<Run, 'client'> | null> {
     const { prompt, dataset, model, parameters, metrics } = params;
 
     // Validate parameters
