@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { QuotientAI } from '../quotientai/index';
 import { BaseQuotientClient } from '../quotientai/client';
-import { AuthResource } from '../quotientai/resources/auth';
 
 vi.mock('../quotientai/client', () => {
     return {
@@ -43,13 +42,13 @@ describe('QuotientAI', () => {
     });
 
     it('should initialize with the correct api key', () => {
-        const quotientAI = new QuotientAI('test_api_key');
+        new QuotientAI('test_api_key');
         expect(BaseQuotientClient).toHaveBeenCalledWith('test_api_key');
     });
 
     it('should initialize with the correct api key from environment variable', () => {
         process.env.QUOTIENT_API_KEY = 'test_api_key';
-        const quotientAI = new QuotientAI();
+        new QuotientAI();
         expect(BaseQuotientClient).toHaveBeenCalledWith('test_api_key');
     });
 
@@ -59,7 +58,7 @@ describe('QuotientAI', () => {
     });
     
     it('should call the auth resource on initialization', async () => {
-        const quotientAI = new QuotientAI('test_api_key');
+        new QuotientAI('test_api_key');
         await new Promise(resolve => setTimeout(resolve, 0));
         expect(mockAuthenticate).toHaveBeenCalledOnce();
     });

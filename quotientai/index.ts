@@ -45,14 +45,14 @@ export class QuotientAI {
     this.auth.authenticate();
 
     // Create an unconfigured logger instance
-    this.logger = new QuotientLogger(this.logs);
+    this.logger = new QuotientLogger(this.logs as LogsResource);
   }
 
   async evaluate(params: {
     prompt: Prompt;
     dataset: Dataset;
     model: Model;
-    parameters: Record<string, any>;
+    parameters: Record<string, any>; 
     metrics: string[];
   }): Promise<Omit<Run, 'client'> | null> {
     const { prompt, dataset, model, parameters, metrics } = params;

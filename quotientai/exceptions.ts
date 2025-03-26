@@ -1,6 +1,5 @@
-import axios, { AxiosError, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
-const DEFAULT_REQUEST_TIMEOUT = 10000; // 10 seconds in milliseconds
+import axios, { AxiosError, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
 export class QuotientAIError extends Error {
     constructor(message: string) {
@@ -156,9 +155,10 @@ export function handleErrors() {
                             const { status, data } = axiosError.response;
                             
                             switch (status) {
-                                case 400:
+                                case 400: {
                                     const message = parseBadRequestError(axiosError.response);
                                     throw new BadRequestError(message, axiosError.response, data);
+                                }
                                 case 401:
                                     throw new AuthenticationError(
                                         'unauthorized: the request requires user authentication. ensure your API key is correct.',
@@ -177,13 +177,14 @@ export function handleErrors() {
                                         axiosError.response,
                                         data
                                     );
-                                case 422:
+                                case 422: {
                                     const unprocessableMessage = parseUnprocessableEntityError(axiosError.response);
                                     throw new UnprocessableEntityError(
                                         unprocessableMessage,
                                         axiosError.response,
                                         data
                                     );
+                                }
                                 default:
                                     throw new APIStatusError(
                                         `unexpected status code: ${status}. contact support@quotientai.co for help.`,

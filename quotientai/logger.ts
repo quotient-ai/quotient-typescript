@@ -1,4 +1,10 @@
+
 import { LogEntry, LoggerConfig } from './types';
+
+interface LogsResource {
+  create(params: LogEntry): Promise<void>;
+  list(): Promise<LogEntry[]>;
+}
 
 export class QuotientLogger {
   private appName: string | null = null;
@@ -9,9 +15,9 @@ export class QuotientLogger {
   private inconsistencyDetection: boolean = false;
   private configured: boolean = false;
   private hallucinationDetectionSampleRate: number = 0.0;
-  private logsResource: any; // Replace with proper type when implementing LogsResource
+  private logsResource: LogsResource;
 
-  constructor(logsResource: any) {
+  constructor(logsResource: LogsResource) {
     this.logsResource = logsResource;
   }
 
@@ -39,6 +45,10 @@ export class QuotientLogger {
   async log(params: Omit<LogEntry, 'app_name' | 'environment'>): Promise<void> {
     if (!this.configured) {
       throw new Error('Logger is not configured. Please call init() before logging.');
+    }
+
+    if (!this.appName || !this.environment) {
+      throw new Error('Logger is not properly configured. app_name and environment must be set.');
     }
 
     // Merge default tags with any tags provided at log time

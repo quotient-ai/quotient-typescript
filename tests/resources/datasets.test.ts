@@ -711,7 +711,7 @@ describe('DatasetsResource', () => {
       }
       return Promise.resolve([]);
     });
-    let rowResponses: DatasetRowResponse[] = [];
+    const rowResponses: DatasetRowResponse[] = [];
     const datasetsResource = new DatasetsResource(client);
     await datasetsResource.batchCreateRows('test_id', [{
       id: 'new_row_id',

@@ -1,4 +1,3 @@
-import { AxiosInstance } from 'axios';
 import { BaseQuotientClient } from './client';
 
 export interface TokenData {
@@ -69,7 +68,7 @@ export interface RunResult {
   id: string;
   input: string;
   output: string;
-  values: Record<string, any>;
+  values: Record<string, any>; 
   created_at: Date;
   created_by: string;
   context: string;
@@ -81,19 +80,19 @@ export interface LogEntry {
   environment: string;
   user_query: string;
   model_output: string;
-  documents?: string[];
-  message_history?: Array<Record<string, any>>;
-  instructions?: string[];
-  tags?: Record<string, any>;
-  hallucination_detection?: boolean;
-  inconsistency_detection?: boolean;
+  documents: string[];
+  message_history?: Array<Record<string, any>> | null; 
+  instructions?: string[] | null;
+  tags?: Record<string, any>; 
+  hallucination_detection: boolean;
+  inconsistency_detection: boolean;
   hallucination_detection_sample_rate?: number;
 }
 
 export interface LoggerConfig {
   app_name: string;
   environment: string;
-  tags?: Record<string, any>;
+  tags?: Record<string, any>; 
   sample_rate?: number;
   hallucination_detection?: boolean;
   inconsistency_detection?: boolean;

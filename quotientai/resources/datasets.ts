@@ -71,9 +71,8 @@ export class DatasetsResource {
 
   async get(id: string): Promise<Dataset> {
     const response = await this.client.get(`/datasets/${id}`) as DatasetResponse;
-    let rows: DatasetRow[] | undefined;
 
-    rows = response.dataset_rows?.map(row => ({
+    const rows = response.dataset_rows?.map(row => ({
       id: row.id,
       input: row.input,
       context: row.context,
@@ -105,10 +104,10 @@ export class DatasetsResource {
     }) as DatasetResponse;
 
     const id = response.id;
-    let rowResponses: DatasetRowResponse[] = [];
+    const rowResponses: DatasetRowResponse[] = [];
     let datasetRows: DatasetRow[] = [];
     if (rows) {
-      let results = await this.batchCreateRows(id, rows, rowResponses);
+      const results = await this.batchCreateRows(id, rows, rowResponses);
       datasetRows = results.map(result => ({
         id: result.id,
         input: result.input,
@@ -176,9 +175,9 @@ export class DatasetsResource {
   }
 
   async append(dataset: Dataset, rows: DatasetRow[]): Promise<Dataset> {
-    let rowResponses: DatasetRowResponse[] = [];
+    const rowResponses: DatasetRowResponse[] = [];
     let datasetRows: DatasetRow[] = [];
-    let results = await this.batchCreateRows(dataset.id, rows, rowResponses);
+    const results = await this.batchCreateRows(dataset.id, rows, rowResponses);
     datasetRows = results.map(result => ({
       id: result.id,
       input: result.input,
