@@ -1,0 +1,24 @@
+.PHONY: bootstrap
+
+bootstrap:
+	npm install
+
+.PHONY: test
+
+test:
+	npm test
+
+.PHONY: lint
+
+lint:
+	npm run lint
+
+.PHONY: coverage
+
+coverage:
+	npm run coverage
+
+.PHONY: build
+
+build:
+	npm run build
