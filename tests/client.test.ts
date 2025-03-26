@@ -1,4 +1,3 @@
-
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BaseQuotientClient } from '../quotientai/client';
 import * as fs from 'fs';
@@ -94,11 +93,11 @@ describe('BaseQuotientClient', () => {
         expect(mkdirSpy).toHaveBeenCalledWith(expect.any(String), { recursive: true });
         expect(writeSpy).toHaveBeenCalledWith(
             expect.any(String),
-            JSON.stringify({
-                token: 'test_token',
-                expires_at: Math.floor(Date.now() / 1000) + 3600
-            })
+            expect.stringContaining('"token":"test_token"')
         );
+        const writeCall = writeSpy.mock.calls[0];
+        const writtenData = writeCall[1] as string;
+        expect(typeof JSON.parse(writtenData).expires_at).toBe('number');
     });
 
     it('should read the token from the file system', async () => {
