@@ -239,7 +239,10 @@ describe('DatasetsResource', () => {
     });
 
     const datasetsResource = new DatasetsResource(client);
-    const dataset = await datasetsResource.create('test_dataset', 'test description');
+    const dataset = await datasetsResource.create({
+      name: 'test_dataset',
+      description: 'test description'
+    });
     
     expect(dataset).toBeDefined();
     expect(dataset.rows).toEqual([]);
@@ -282,19 +285,19 @@ describe('DatasetsResource', () => {
     });
 
     const datasetsResource = new DatasetsResource(client);
-    const dataset = await datasetsResource.create('test_dataset', 'test description', [{
-      id: 'test_row_id',
-      input: 'test input',
-      context: 'test context',
-      expected: 'test expected',
-      metadata: {   
-        annotation: 'test annotation',
-        annotation_note: 'test note'
-      },
-      created_by: 'test_user',
-      created_at: new Date(mockDate),
-      updated_at: new Date(mockDate)
-    }]);
+    const dataset = await datasetsResource.create({
+      name: 'test_dataset',
+      description: 'test description',
+      rows: [{
+        input: 'test input',
+        context: 'test context',
+        expected: 'test expected',
+        metadata: {   
+          annotation: 'test annotation',
+          annotation_note: 'test note'
+        }
+      }]
+    });
 
     expect(dataset).toBeDefined();
     expect(dataset.rows).toEqual([{
@@ -311,11 +314,23 @@ describe('DatasetsResource', () => {
       updated_at: new Date(mockDate)
     }]);
 
-    expect(client.post).toHaveBeenCalledWith('/datasets', {
+    expect(client.post).toHaveBeenNthCalledWith(1, '/datasets', {
       name: 'test_dataset',
-      description: 'test description'
+      description: 'test description',
+      rows: [{
+        input: 'test input',
+        context: 'test context',
+        expected: 'test expected',
+        metadata: {
+          annotation: 'test annotation',
+          annotation_note: 'test note'
+        }
+      }],
+      model_id: undefined,
+      user_id: undefined,
+      tags: undefined
     });
-    expect(client.post).toHaveBeenCalledWith('/datasets/test_id/dataset_rows/batch', {
+    expect(client.post).toHaveBeenNthCalledWith(2, '/datasets/test_id/dataset_rows/batch', {
       rows: expect.any(Array)
     });
   });
@@ -342,13 +357,17 @@ describe('DatasetsResource', () => {
 
     const datasetsResource = new DatasetsResource(client);
     const dataset = await datasetsResource.update({
-      id: 'test_id',
+      dataset: {
+        id: 'test_id',
+        name: 'test_dataset',
+        created_by: 'test_user',
+        created_at: new Date(mockDate),
+        updated_at: new Date(mockDate),
+        description: 'test description'
+      },
       name: 'test_dataset',
-      created_by: 'test_user',
-      created_at: new Date(mockDate),
-      updated_at: new Date(mockDate),
       description: 'test description'
-    }, 'test_dataset', 'test description');
+    });
 
     expect(dataset).toBeDefined();
     expect(dataset.rows).toEqual([]);
@@ -390,38 +409,39 @@ describe('DatasetsResource', () => {
     
     const datasetsResource = new DatasetsResource(client);
     const dataset = await datasetsResource.update({
-      id: 'test_id',
+      dataset: {
+        id: 'test_id',
+        name: 'test_dataset',
+        created_by: 'test_user',
+        created_at: new Date(mockDate),
+        updated_at: new Date(mockDate),
+        description: 'test description',
+        rows: [{
+          id: 'test_row_id',
+          input: 'test input',
+          context: 'test context',
+          expected: 'test expected',
+          metadata: {
+            annotation: 'test annotation',
+            annotation_note: 'test note'
+          },
+          created_by: 'test_user',
+          created_at: new Date(mockDate),
+          updated_at: new Date(mockDate)
+        }]
+      },
       name: 'test_dataset',
-      created_by: 'test_user',
-      created_at: new Date(mockDate),
-      updated_at: new Date(mockDate),
       description: 'test description',
       rows: [{
-        id: 'test_row_id',
         input: 'test input',
         context: 'test context',
         expected: 'test expected',
         metadata: {
           annotation: 'test annotation',
           annotation_note: 'test note'
-        },
-        created_by: 'test_user',
-        created_at: new Date(mockDate),
-        updated_at: new Date(mockDate)
+        }
       }]
-    }, 'test_dataset', 'test description', [{
-      id: 'test_row_id',
-      input: 'test input',
-      context: 'test context',
-      expected: 'test expected',
-      metadata: {
-        annotation: 'test annotation',
-        annotation_note: 'test note'
-      },
-      created_by: 'test_user',
-      created_at: new Date(mockDate),
-      updated_at: new Date(mockDate)
-    }]);
+    });
 
     expect(dataset).toBeDefined();
     expect(dataset.rows).toEqual([{
@@ -474,25 +494,24 @@ describe('DatasetsResource', () => {
 
     const datasetsResource = new DatasetsResource(client);
     const dataset = await datasetsResource.append({
-      id: 'test_id',
-      name: 'test_dataset',
-      created_by: 'test_user',
-      created_at: new Date(mockDate),
-      updated_at: new Date(mockDate),
-      description: 'test description',
-    }, [{
-      id: 'new_row_id',
-      input: 'test input',
-      context: 'test context',
-      expected: 'test expected',
-      metadata: {
-        annotation: 'test annotation',
-        annotation_note: 'test note'
+      dataset: {
+        id: 'test_id',
+        name: 'test_dataset',
+        created_by: 'test_user',
+        created_at: new Date(mockDate),
+        updated_at: new Date(mockDate),
+        description: 'test description'
       },
-      created_by: 'test_user',
-      created_at: new Date(mockDate),
-      updated_at: new Date(mockDate)
-    }]);
+      rows: [{
+        input: 'test input',
+        context: 'test context',
+        expected: 'test expected',
+        metadata: {
+          annotation: 'test annotation',
+          annotation_note: 'test note'
+        }
+      }]
+    });
 
     expect(dataset).toBeDefined();
     
@@ -546,38 +565,37 @@ describe('DatasetsResource', () => {
 
     const datasetsResource = new DatasetsResource(client);
     const dataset = await datasetsResource.append({
-      id: 'test_id',
-      name: 'test_dataset',
-      created_by: 'test_user',
-      created_at: new Date(mockDate),
-      updated_at: new Date(mockDate),
-      description: 'test description',
+      dataset: {
+        id: 'test_id',
+        name: 'test_dataset',
+        created_by: 'test_user',
+        created_at: new Date(mockDate),
+        updated_at: new Date(mockDate),
+        description: 'test description',
+        rows: [{
+          id: 'existing_row_id',
+          input: 'test input',
+          context: 'test context',
+          expected: 'test expected',
+          metadata: {
+            annotation: 'test annotation',
+            annotation_note: 'test note'
+          },
+          created_by: 'test_user',
+          created_at: new Date(mockDate),
+          updated_at: new Date(mockDate)
+        }]
+      },
       rows: [{
-        id: 'existing_row_id',
         input: 'test input',
         context: 'test context',
         expected: 'test expected',
         metadata: {
           annotation: 'test annotation',
           annotation_note: 'test note'
-        },
-        created_by: 'test_user',
-        created_at: new Date(mockDate),
-        updated_at: new Date(mockDate)
+        }
       }]
-    }, [{
-      id: 'new_row_id',
-      input: 'test input',
-      context: 'test context',
-      expected: 'test expected',
-      metadata: {
-        annotation: 'test annotation',
-        annotation_note: 'test note'
-      },
-      created_by: 'test_user',
-      created_at: new Date(mockDate),
-      updated_at: new Date(mockDate)
-    }]);
+    });
 
     expect(dataset).toBeDefined();
     
@@ -629,25 +647,28 @@ describe('DatasetsResource', () => {
 
     const datasetsResource = new DatasetsResource(client);
     await datasetsResource.delete({
-      id: 'test_id',
-      name: 'test_dataset',
-      created_by: 'test_user',
-      created_at: new Date(mockDate),
-      updated_at: new Date(mockDate),
-      description: 'test description'
-    }, [{
-      id: 'test_row_id',
-      input: 'test input',
-      context: 'test context',
-      expected: 'test expected',
-      metadata: {
-        annotation: 'test annotation',
-        annotation_note: 'test note'
+      dataset: {
+        id: 'test_id',
+        name: 'test_dataset',
+        created_by: 'test_user',
+        created_at: new Date(mockDate),
+        updated_at: new Date(mockDate),
+        description: 'test description'
       },
-      created_by: 'test_user',
-      created_at: new Date(mockDate),
-      updated_at: new Date(mockDate)
-    }]);
+      rows: [{
+        id: 'test_row_id',
+        input: 'test input',
+        context: 'test context',
+        expected: 'test expected',
+        metadata: {
+          annotation: 'test annotation',
+          annotation_note: 'test note'
+        },
+        created_by: 'test_user',
+        created_at: new Date(mockDate),
+        updated_at: new Date(mockDate)
+      }]
+    });
 
     expect(patchMock).toHaveBeenCalledWith('/datasets/test_id/dataset_rows/test_row_id', {
       id: 'test_row_id',
@@ -675,12 +696,14 @@ describe('DatasetsResource', () => {
 
     const datasetsResource = new DatasetsResource(client);
     await datasetsResource.delete({
-      id: 'test_id',
-      name: 'test_dataset',
-      created_by: 'test_user',
-      created_at: new Date(mockDate),
-      updated_at: new Date(mockDate),
-      description: 'test description'
+      dataset: {
+        id: 'test_id',
+        name: 'test_dataset',
+        created_by: 'test_user',
+        created_at: new Date(mockDate),
+        updated_at: new Date(mockDate),
+        description: 'test description'
+      }
     });
 
     expect(patchMock).toHaveBeenCalledWith('/datasets/test_id', {
@@ -714,17 +737,13 @@ describe('DatasetsResource', () => {
     const rowResponses: DatasetRowResponse[] = [];
     const datasetsResource = new DatasetsResource(client);
     await datasetsResource.batchCreateRows('test_id', [{
-      id: 'new_row_id',
       input: 'test input',
       context: 'test context',
       expected: 'test expected',
       metadata: {
         annotation: 'test annotation',
         annotation_note: 'test note'
-      },
-      created_by: 'test_user',
-      created_at: new Date(mockDate),
-      updated_at: new Date(mockDate)
+      }
     }], rowResponses);
 
     expect(rowResponses).toEqual([{
@@ -773,17 +792,13 @@ describe('DatasetsResource', () => {
 
     const datasetsResource = new DatasetsResource(client);
     await datasetsResource.batchCreateRows('test_id', [{
-      id: 'new_row_id',
       input: 'test input',
       context: 'test context',
       expected: 'test expected',
       metadata: {
         annotation: 'test annotation',
         annotation_note: 'test note'
-      },
-      created_by: 'test_user',
-      created_at: new Date(mockDate),
-      updated_at: new Date(mockDate)
+      }
     }], []);
 
     expect(postMock).toHaveBeenCalledWith('/datasets/test_id/dataset_rows/batch', {
@@ -798,24 +813,19 @@ describe('DatasetsResource', () => {
 
   it('should fail if batch size is one and the initial request fails', async () => {
     const client = new BaseQuotientClient('test');
-    const mockDate = new Date('2024-01-01').toISOString();
 
     const postMock = vi.spyOn(client, 'post');
     postMock.mockRejectedValue(new Error('Test error'));
 
     const datasetsResource = new DatasetsResource(client);
     await expect(datasetsResource.batchCreateRows('test_id', [{
-      id: 'new_row_id',
       input: 'test input',
       context: 'test context',
       expected: 'test expected',
       metadata: {
         annotation: 'test annotation',
         annotation_note: 'test note'
-      },
-      created_by: 'test_user',
-      created_at: new Date(mockDate),
-      updated_at: new Date(mockDate)
+      }
     }], [], 1)).rejects.toThrow('Test error');
 
     expect(postMock).toHaveBeenCalledWith('/datasets/test_id/dataset_rows/batch', {

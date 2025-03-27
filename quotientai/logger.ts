@@ -42,6 +42,8 @@ export class QuotientLogger {
     return Math.random() < this.sampleRate;
   }
 
+  // log a message
+  // params: Omit<LogEntry, 'app_name' | 'environment'>
   async log(params: Omit<LogEntry, 'app_name' | 'environment'>): Promise<void> {
     if (!this.configured) {
       throw new Error('Logger is not configured. Please call init() before logging.');

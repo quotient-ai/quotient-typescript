@@ -12,6 +12,22 @@ interface PromptResponse {
   updated_at: string;
 }
 
+interface GetPromptParams {
+  id: string;
+  version?: string;
+}
+
+interface CreatePromptParams {
+  name: string;
+  system_prompt?: string;
+  user_prompt?: string;
+}
+
+interface UpdatePromptParams {
+  prompt: Prompt;
+}
+
+
 export class PromptsResource {
   protected client: BaseQuotientClient;
 
@@ -19,6 +35,8 @@ export class PromptsResource {
     this.client = client;
   }
 
+  // list all prompts
+  // no params
   async list(): Promise<Prompt[]> {
     const response = await this.client.get('/prompts') as PromptResponse[];
     const prompts: Prompt[] = [];
@@ -38,10 +56,12 @@ export class PromptsResource {
     return prompts;
   }
 
-  async getPrompt(id: string, version?: string): Promise<Prompt> {
-    let path = `/prompts/${id}`;
-    if (version) {
-      path += `/versions/${version}`;
+  // get a prompt
+  // options: GetPromptParams
+  async getPrompt(options: GetPromptParams): Promise<Prompt> {
+    let path = `/prompts/${options.id}`;
+    if (options.version) {
+      path += `/versions/${options.version}`;
     }
     const response = await this.client.get(path) as PromptResponse;
     return {
@@ -56,11 +76,13 @@ export class PromptsResource {
     };
   } 
 
-  async create(name: string, system_prompt?: string, user_prompt?: string): Promise<Prompt> {
+  // create a prompt
+  // options: CreatePromptParams
+  async create(params: CreatePromptParams): Promise<Prompt> {
     const response = await this.client.post('/prompts', {
-      name,
-      system_prompt,
-      user_prompt
+      name: params.name,
+      system_prompt: params.system_prompt,
+      user_prompt: params.user_prompt
     }) as PromptResponse;
     return {
       id: response.id,
@@ -74,11 +96,13 @@ export class PromptsResource {
     };
   }
 
-  async update(prompt: Prompt): Promise<Prompt> {
-    const response = await this.client.patch(`/prompts/${prompt.id}`, {
-      name: prompt.name,
-      system_prompt: prompt.system_prompt,
-      user_prompt: prompt.user_prompt
+  // update a prompt
+  // options: UpdatePromptParams
+  async update(options: UpdatePromptParams): Promise<Prompt> {
+    const response = await this.client.patch(`/prompts/${options.prompt.id}`, {
+      name: options.prompt.name,
+      system_prompt: options.prompt.system_prompt,
+      user_prompt: options.prompt.user_prompt
     }) as PromptResponse;
     return {
       id: response.id,
@@ -92,12 +116,14 @@ export class PromptsResource {
     };
   }
 
-  async deletePrompt(prompt: Prompt): Promise<void> {
-    await this.client.patch(`/prompts/${prompt.id}`, {
-      id: prompt.id,
-      name: prompt.name,
-      system_prompt: prompt.system_prompt,
-      user_prompt: prompt.user_prompt,
+  // delete a prompt
+  // options: UpdatePromptParams
+  async deletePrompt(options: UpdatePromptParams): Promise<void> {
+    await this.client.patch(`/prompts/${options.prompt.id}`, {
+      id: options.prompt.id,
+      name: options.prompt.name,
+      system_prompt: options.prompt.system_prompt,
+      user_prompt: options.prompt.user_prompt,
       is_deleted: true
     });
   }

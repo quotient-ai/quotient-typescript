@@ -83,6 +83,8 @@ export class LogsResource {
         this.client = client;
     }
 
+    // create a log
+    // params: CreateLogParams
     async create(params: CreateLogParams): Promise<void> {
         try {
             await this.client.post('/logs', params);
@@ -92,6 +94,8 @@ export class LogsResource {
         }
     }
 
+    // list logs
+    // params: ListLogsParams
     async list(params: ListLogsParams = {}): Promise<Log[]> {
         const queryParams: Record<string, any> = {};
         

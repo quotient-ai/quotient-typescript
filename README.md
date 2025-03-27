@@ -1,6 +1,9 @@
-# QuotientAI TypeScript Client
+# quotient-typescript
+[![npm version](https://img.shields.io/npm/v/quotient-typescript)](https://www.npmjs.com/package/quotient-typescript)
 
-A TypeScript client for the QuotientAI API.
+## Overview
+
+`quotient-typescript` is an SDK built to manage artifacts (prompts, datasets), and run evaluations on [Quotient](https://quotientai.co).
 
 ## Installation
 
@@ -10,56 +13,11 @@ npm install quotient-typescript
 
 ## Usage
 
-```typescript
-import { QuotientAI } from 'quotient-typescript';
+Create an API key on Quotient and set it as an environment variable called `QUOTIENT_API_KEY`. Then check out the examples in the `examples/` directory or see our [docs](https://docs.quotientai.co) for a more comprehensive walkthrough.
 
-// Initialize the client
-const client = new QuotientAI('your-api-key');
-
-// Configure the logger
-client.logger.init({
-  app_name: 'my-app',
-  environment: 'production',
-  sample_rate: 0.1,
-  hallucination_detection: true
-});
-
-// Log an interaction
-await client.logger.log({
-  user_query: 'What is the capital of France?',
-  model_output: 'Paris is the capital of France.',
-  documents: ['document1', 'document2'],
-  message_history: [
-    { role: 'user', content: 'What is the capital of France?' },
-    { role: 'assistant', content: 'Paris is the capital of France.' }
-  ],
-  instructions: ['Be concise', 'Be accurate'],
-  tags: { user_id: '123' }
-});
-
-// Evaluate a model
-const run = await client.evaluate({
-  prompt: { id: 'prompt-1', name: 'Capital City', content: 'What is the capital of {country}?' },
-  dataset: { id: 'dataset-1', name: 'Countries' },
-  model: { id: 'model-1', name: 'GPT-4' },
-  parameters: {
-    temperature: 0.7,
-    max_tokens: 100
-  },
-  metrics: ['accuracy', 'latency']
-});
-```
-
-## Features
-
-- Authentication with API key and JWT token management
-- Automatic token refresh
-- Configurable logging with sampling
-- Hallucination and inconsistency detection
-- Model evaluation
-- Type safety with TypeScript
-
-## API Reference
+The examples directory contains:
+- `example_evaluate.ts` - Running an evaluation against a dataset
+- `example_logs.ts` - Logging with hallucination detection
 
 ### QuotientAI
 

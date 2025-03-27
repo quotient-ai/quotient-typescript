@@ -7,6 +7,8 @@ export class AuthResource {
     this.client = client;
   }
 
+  // authenticate
+  // no params
   async authenticate(): Promise<any> {
     const response = await this.client.get('/auth/profile');
     return response;

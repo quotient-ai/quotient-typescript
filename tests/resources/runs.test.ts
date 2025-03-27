@@ -67,7 +67,13 @@ describe('RunsResource', () => {
         const mockPrompt = { id: 'test', name: 'test', content: 'test', version: 1, user_prompt: 'test', created_at: new Date(), updated_at: new Date() };
         const mockDataset = { id: 'test', name: 'test', created_by: 'test', created_at: new Date(), updated_at: new Date() };
         const mockModel = { id: 'test', name: 'test', provider: { id: 'test', name: 'test' }, created_at: new Date() };
-        const run = await runsResource.create(mockPrompt, mockDataset, mockModel, {}, []);
+        const run = await runsResource.create({
+            prompt: mockPrompt,
+            dataset: mockDataset,
+            model: mockModel,
+            parameters: {},
+            metrics: []
+        });
         expect(run).toBeInstanceOf(Run);
         expect(run?.id).toBe('test');
         expect(run?.prompt).toBe('test');

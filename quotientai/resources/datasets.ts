@@ -27,6 +27,42 @@ interface ListOptions {
   includeRows?: boolean;
 }
 
+interface CreateDatasetParams {
+  name: string;
+  description?: string;
+  rows?: CreateDatasetRowParams[];
+  model_id?: string;
+  user_id?: string;
+  tags?: Record<string, string>;
+}
+
+interface CreateDatasetRowParams {
+  input: string;
+  context?: string;
+  expected?: string;
+  metadata?: CreateDatasetRowMetadataParams;
+}
+
+interface CreateDatasetRowMetadataParams {
+  annotation?: string;
+  annotation_note?: string;
+}
+
+interface AppendDatasetParams {
+  dataset: Dataset;
+  rows?: CreateDatasetRowParams[];
+}
+
+interface UpdateDatasetParams extends AppendDatasetParams {
+  name?: string;
+  description?: string;
+}
+
+interface DeleteDatasetParams {
+  dataset: Dataset;
+  rows?: DatasetRow[];
+}
+
 export class DatasetsResource {
   protected client: BaseQuotientClient;
 
@@ -34,6 +70,8 @@ export class DatasetsResource {
     this.client = client;
   }
 
+  // list all datasets
+  // options: ListOptions
   async list(options: ListOptions = {}): Promise<Dataset[]> {
     const response = await this.client.get('/datasets') as DatasetResponse[];
     const datasets: Dataset[] = [];
@@ -69,6 +107,8 @@ export class DatasetsResource {
     return datasets;
   }
 
+  // get a dataset
+  // id: string
   async get(id: string): Promise<Dataset> {
     const response = await this.client.get(`/datasets/${id}`) as DatasetResponse;
 
@@ -97,17 +137,28 @@ export class DatasetsResource {
     };
   }
 
-  async create(name: string, description?: string, rows?: DatasetRow[]): Promise<Dataset> {
+  // create a dataset
+  // options: CreateDatasetParams
+  async create(options: CreateDatasetParams): Promise<Dataset> {
     const response = await this.client.post('/datasets', {
-      name,
-      description
+      name: options.name,
+      description: options.description,
+      rows: options.rows?.map(row => ({
+        input: row.input,
+        context: row.context,
+        expected: row.expected,
+        metadata: row.metadata
+      })),
+      model_id: options.model_id,
+      user_id: options.user_id,
+      tags: options.tags
     }) as DatasetResponse;
 
     const id = response.id;
     const rowResponses: DatasetRowResponse[] = [];
     let datasetRows: DatasetRow[] = [];
-    if (rows) {
-      const results = await this.batchCreateRows(id, rows, rowResponses);
+    if (options.rows) {
+      const results = await this.batchCreateRows(id, options.rows, rowResponses);
       datasetRows = results.map(result => ({
         id: result.id,
         input: result.input,
@@ -136,20 +187,21 @@ export class DatasetsResource {
     };
   }
 
-  async update(dataset: Dataset, name?: string, description?: string, rows?: DatasetRow[]): Promise<Dataset> {
+  // update a dataset
+  // dataset: Dataset, name?: string, description?: string, rows?: DatasetRow[]
+  async update(options: UpdateDatasetParams): Promise<Dataset> {
     const payload = {
-      name,
-      description, 
-      rows: rows?.map(row => ({
-        id: row.id,
+      name: options.name,
+      description: options.description, 
+      rows: options.rows?.map(row => ({
         input: row.input,
         context: row.context,
         expected: row.expected,
-        annotation: row.metadata.annotation,
-        annotation_note: row.metadata.annotation_note
+        annotation: row.metadata?.annotation,
+        annotation_note: row.metadata?.annotation_note
       })),
     }
-    const response = await this.client.patch(`/datasets/${dataset.id}`, payload) as DatasetResponse;
+    const response = await this.client.patch(`/datasets/${options.dataset.id}`, payload) as DatasetResponse;
 
     return {
       id: response.id,
@@ -174,10 +226,15 @@ export class DatasetsResource {
     };
   }
 
-  async append(dataset: Dataset, rows: DatasetRow[]): Promise<Dataset> {
+  // append rows to a dataset
+  // options: AppendDatasetParams
+  async append(options: AppendDatasetParams): Promise<Dataset> {
+    if (!options.rows) {
+      throw new Error('rows are required');
+    }
     const rowResponses: DatasetRowResponse[] = [];
     let datasetRows: DatasetRow[] = [];
-    const results = await this.batchCreateRows(dataset.id, rows, rowResponses);
+    const results = await this.batchCreateRows(options.dataset.id, options.rows, rowResponses);
     datasetRows = results.map(result => ({
       id: result.id,
       input: result.input,
@@ -193,20 +250,22 @@ export class DatasetsResource {
     }));
 
     return {
-      id: dataset.id,
-      name: dataset.name,
-      created_by: dataset.created_by,
-      description: dataset.description,
-      created_at: dataset.created_at,
-      updated_at: dataset.updated_at,
-      rows: dataset.rows ? [...dataset.rows, ...datasetRows] : datasetRows
+      id: options.dataset.id,
+      name: options.dataset.name,
+      created_by: options.dataset.created_by,
+      description: options.dataset.description,
+      created_at: options.dataset.created_at,
+      updated_at: options.dataset.updated_at,
+      rows: options.dataset.rows ? [...options.dataset.rows, ...datasetRows] : datasetRows
     };
   }
 
-  async delete(dataset: Dataset, rows?: DatasetRow[]): Promise<void> { 
-    if (rows) {
-      for (const row of rows) {
-        await this.client.patch(`/datasets/${dataset.id}/dataset_rows/${row.id}`, {
+  // delete a dataset
+  // options: DeleteDatasetParams
+  async delete(options: DeleteDatasetParams): Promise<void> { 
+    if (options.rows) {
+      for (const row of options.rows) {
+        await this.client.patch(`/datasets/${options.dataset.id}/dataset_rows/${row.id}`, {
           id: row.id,
           input: row.input,
           context: row.context,
@@ -217,15 +276,17 @@ export class DatasetsResource {
         });
       }
     } else {
-      await this.client.patch(`/datasets/${dataset.id}`, {
-        name: dataset.name,
-        description: dataset.description,
+      await this.client.patch(`/datasets/${options.dataset.id}`, {
+        name: options.dataset.name,
+        description: options.dataset.description,
         is_deleted: true
       });
     }
   }
 
-  async batchCreateRows(datasetID: string, rows: DatasetRow[], rowResponses: DatasetRowResponse[], batchSize: number = 10): Promise<DatasetRowResponse[]> {
+  // batch create rows
+  // datasetID: string, rows: DatasetRow[], rowResponses: DatasetRowResponse[], batchSize: number = 10
+  async batchCreateRows(datasetID: string, rows: CreateDatasetRowParams[], rowResponses: DatasetRowResponse[], batchSize: number = 10): Promise<DatasetRowResponse[]> {
     // Process rows in batches
     for (let i = 0; i < rows.length; i += batchSize) {
       const batch = rows.slice(i, i + batchSize);
