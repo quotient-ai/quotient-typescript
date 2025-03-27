@@ -1,5 +1,5 @@
 {
-  "name": "@quotient-ai/quotient-typescript",
+  "name": "quotientai",
   "version": "0.0.1",
   "description": "TypeScript client for QuotientAI API",
   "main": "dist/index.js",
