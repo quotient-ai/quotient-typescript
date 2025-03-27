@@ -44,7 +44,7 @@ describe('PromptsResource', () => {
         const promptsResource = new PromptsResource(client);
         const getMock = vi.spyOn(client, 'get');
         getMock.mockResolvedValue(SAMPLE_PROMPTS[0]);
-        const prompt = await promptsResource.getPrompt('test');
+        const prompt = await promptsResource.getPrompt({ id: 'test' });
         expect(prompt).toEqual({
             ...SAMPLE_PROMPTS[0],
             created_at: new Date(SAMPLE_PROMPTS[0].created_at),
@@ -58,7 +58,7 @@ describe('PromptsResource', () => {
         const promptsResource = new PromptsResource(client);
         const getMock = vi.spyOn(client, 'get');
         getMock.mockResolvedValue(SAMPLE_PROMPTS[0]);
-        const prompt = await promptsResource.getPrompt('test', '1');
+        const prompt = await promptsResource.getPrompt({ id: 'test', version: '1' });
         expect(prompt).toEqual({
             ...SAMPLE_PROMPTS[0],
             created_at: new Date(SAMPLE_PROMPTS[0].created_at),
@@ -72,7 +72,11 @@ describe('PromptsResource', () => {
         const promptsResource = new PromptsResource(client);
         const postMock = vi.spyOn(client, 'post');
         postMock.mockResolvedValue(SAMPLE_PROMPTS[0]);
-        const prompt = await promptsResource.create('test', 'test', 'test');
+        const prompt = await promptsResource.create({
+            name: 'test',
+            system_prompt: 'test',
+            user_prompt: 'test'
+        });
         expect(prompt).toEqual({
             ...SAMPLE_PROMPTS[0],
             created_at: new Date(SAMPLE_PROMPTS[0].created_at),
@@ -87,9 +91,11 @@ describe('PromptsResource', () => {
         const patchMock = vi.spyOn(client, 'patch');
         patchMock.mockResolvedValue(SAMPLE_PROMPTS[0]);
         const prompt = await promptsResource.update({
-            ...SAMPLE_PROMPTS[0],
-            created_at: new Date(SAMPLE_PROMPTS[0].created_at),
-            updated_at: new Date(SAMPLE_PROMPTS[0].updated_at)
+            prompt: {
+                ...SAMPLE_PROMPTS[0],
+                created_at: new Date(SAMPLE_PROMPTS[0].created_at),
+                updated_at: new Date(SAMPLE_PROMPTS[0].updated_at)
+            }
         });
         expect(prompt).toEqual({
             ...SAMPLE_PROMPTS[0],
@@ -103,9 +109,11 @@ describe('PromptsResource', () => {
         const patchMock = vi.spyOn(client, 'patch');
         patchMock.mockResolvedValue(SAMPLE_PROMPTS[0]);
         await promptsResource.deletePrompt({
-            ...SAMPLE_PROMPTS[0],
-            created_at: new Date(SAMPLE_PROMPTS[0].created_at),
-            updated_at: new Date(SAMPLE_PROMPTS[0].updated_at)
+            prompt: {
+                ...SAMPLE_PROMPTS[0],
+                created_at: new Date(SAMPLE_PROMPTS[0].created_at),
+                updated_at: new Date(SAMPLE_PROMPTS[0].updated_at)
+            }
         });
         expect(patchMock).toHaveBeenCalledWith('/prompts/test', { id: 'test', name: 'test', system_prompt: 'test', user_prompt: 'test', is_deleted: true });
     });

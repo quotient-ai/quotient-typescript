@@ -15,6 +15,8 @@ export class ModelsResource {
     this.client = client;
   }
 
+  // list all models
+  // no params
   async list(): Promise<Model[]> {
     const response = await this.client.get('/models') as ModelResponse[];
     return response.map(model => ({
@@ -23,6 +25,8 @@ export class ModelsResource {
     }));
   }
 
+  // get a model
+  // name: string
   async getModel(name: string): Promise<Model> {
     const response = await this.client.get(`/models/${name}`) as ModelResponse;
     return {

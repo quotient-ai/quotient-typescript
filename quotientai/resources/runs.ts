@@ -1,5 +1,5 @@
 import { BaseQuotientClient } from '../client';
-import { Dataset, Model, Prompt, RunResult } from '../types';
+import { RunResult, Prompt, Dataset, Model } from '../types';
 
 interface RunResponse {
   id: string;
@@ -28,6 +28,15 @@ interface RunSummary {
   [key: string]: any;
 }
 
+interface CreateRunParams {
+  prompt: Prompt;
+  dataset: Dataset;
+  model: Model;
+  parameters: Record<string, any>;
+  metrics: string[];
+}
+
+
 export class Run {
     id: string;
     prompt: string;
@@ -53,6 +62,8 @@ export class Run {
         this.finished_at = data.finished_at ? new Date(data.finished_at) : undefined;
     }
 
+    // summarize the run
+    // best_n: number = 3, worst_n: number = 3
     summarize(best_n: number = 3, worst_n: number = 3): RunSummary | null {
         if (!this.results || this.results.length === 0) {
             return null;
@@ -101,27 +112,35 @@ export class RunsResource {
         this.client = client;
     }
 
+    // list all runs
+    // no params
     async list(): Promise<Omit<Run, 'client'>[]> {
         const response = await this.client.get('/runs') as RunResponse[];
         return response.map(runData => new Run(this.client, runData));
     }
 
+    // get a run
+    // run_id: string
     async get(run_id: string): Promise<Omit<Run, 'client'> | null> {
         const response = await this.client.get(`/runs/${run_id}`) as RunResponse;
         return new Run(this.client, response);
     }
 
-    async create(prompt: Prompt, dataset: Dataset, model: Model, parameters: Record<string, any>, metrics: string[]): Promise<Omit<Run, 'client'> | null> {
+    // create a run
+    // options: CreateRunParams
+    async create(options: CreateRunParams): Promise<Omit<Run, 'client'> | null> {
         const response = await this.client.post('/runs', {
-            prompt_id: prompt.id,
-            dataset_id: dataset.id,
-            model_id: model.id,
-            parameters,
-            metrics
+            prompt_id: options.prompt.id,
+            dataset_id: options.dataset.id,
+            model_id: options.model.id,
+            parameters: options.parameters,
+            metrics: options.metrics
         }) as RunResponse;
         return new Run(this.client, response);
     }
 
+    // compare runs
+    // runs: Run[]
     async compare(runs: Run[]): Promise<Record<string, any> | null | undefined> {
         if (runs.length <= 1) {
             return null;
