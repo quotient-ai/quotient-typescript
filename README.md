@@ -1,14 +1,14 @@
-# quotient-typescript
-[![npm version](https://img.shields.io/npm/v/quotient-typescript)](https://www.npmjs.com/package/@quotient-ai/quotient-typescript)
+# quotienta
+[![npm version](https://img.shields.io/npm/v/quotientai)](https://www.npmjs.com/package/quotientai)
 
 ## Overview
 
-`quotient-typescript` is an SDK built to manage artifacts (prompts, datasets), and run evaluations on [Quotient](https://quotientai.co).
+`quotientai` is an SDK built to manage artifacts (prompts, datasets), and run evaluations on [Quotient](https://quotientai.co).
 
 ## Installation
 
 ```bash
-npm install quotient-typescript
+npm install quotientai
 ```
 
 ## Usage
