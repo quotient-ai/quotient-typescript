@@ -21,7 +21,7 @@ async function main() {
 
     console.log("Preparing to log with quotient_logger")
     try {
-        await quotient.logger.log({
+        const response = await quotient.logger.log({
             user_query: "How do I cook a goose?",
             model_output: "The capital of France is Paris",
             documents: documents,
@@ -37,11 +37,10 @@ async function main() {
             hallucination_detection: true,
             inconsistency_detection: true,
         });
+        console.log(response.message)
     } catch (error) {
         console.error(error)
     }
-
-    console.log("Logged with quotient_logger")
 }
 
 main().catch(console.error);

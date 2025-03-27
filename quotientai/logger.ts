@@ -1,8 +1,7 @@
-
 import { LogEntry, LoggerConfig } from './types';
 
 interface LogsResource {
-  create(params: LogEntry): Promise<void>;
+  create(params: LogEntry): Promise<any>;
   list(): Promise<LogEntry[]>;
 }
 
@@ -44,7 +43,7 @@ export class QuotientLogger {
 
   // log a message
   // params: Omit<LogEntry, 'app_name' | 'environment'>
-  async log(params: Omit<LogEntry, 'app_name' | 'environment'>): Promise<void> {
+  async log(params: Omit<LogEntry, 'app_name' | 'environment'>): Promise<any> {
     if (!this.configured) {
       throw new Error('Logger is not configured. Please call init() before logging.');
     }
@@ -61,7 +60,7 @@ export class QuotientLogger {
     const inconsistencyDetection = params.inconsistency_detection ?? this.inconsistencyDetection;
 
     if (this.shouldSample()) {
-      await this.logsResource.create({
+      const response = await this.logsResource.create({
         ...params,
         app_name: this.appName,
         environment: this.environment,
@@ -70,6 +69,8 @@ export class QuotientLogger {
         inconsistency_detection: inconsistencyDetection,
         hallucination_detection_sample_rate: this.hallucinationDetectionSampleRate,
       });
+
+      return response;
     }
   }
 } 
