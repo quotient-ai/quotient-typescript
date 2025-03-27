@@ -85,11 +85,13 @@ export class LogsResource {
 
     // create a log
     // params: CreateLogParams
-    async create(params: CreateLogParams): Promise<void> {
+    async create(params: CreateLogParams): Promise<any> {
         try {
-            await this.client.post('/logs', params);
+            const response = await this.client.post('/logs', params);
+            return response;
         } catch (error) {
             console.error('Error posting log:', error);
+            return null;
             // Don't throw the error, just log it
         }
     }

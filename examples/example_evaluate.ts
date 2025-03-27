@@ -58,7 +58,7 @@ async function main() {
             top_p: 0.9,
             max_tokens: 100,
         },
-        metrics: ["exactmatch", "rouge", "bleu"],
+        metrics: ["exactmatch", "rouge1", "sacrebleu"],
     });
 
     console.log(`Run ID: ${run?.id}`);    

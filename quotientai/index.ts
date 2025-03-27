@@ -70,6 +70,12 @@ export class QuotientAI {
       );
     }
 
-    return this.runs.create(prompt, dataset, model, parameters, metrics);
+    return this.runs.create({
+      prompt,
+      dataset,
+      model,
+      parameters,
+      metrics
+    });
   }
 } 

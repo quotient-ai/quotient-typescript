@@ -128,17 +128,17 @@ describe('QuotientAI', () => {
         });
         
         expect(result).toBe(mockRun);
-        expect(quotientAI.runs.create).toHaveBeenCalledWith(
-            expect.objectContaining({ id: 'test_id' }),
-            expect.objectContaining({ id: 'test_dataset' }),
-            expect.objectContaining({ id: 'test_model' }),
-            {
-                temperature: 0.5,
-                top_k: 10,
-                top_p: 0.9,
-                max_tokens: 100,
-            },
-            ['test_metric']
-        );
+        expect(quotientAI.runs.create).toHaveBeenCalledWith({
+          prompt: expect.objectContaining({ id: 'test_id' }),
+          dataset: expect.objectContaining({ id: 'test_dataset' }),
+          model: expect.objectContaining({ id: 'test_model' }),
+          parameters: {
+            max_tokens: 100,
+            temperature: 0.5,
+            top_k: 10,
+            top_p: 0.9,
+          },
+          metrics: ['test_metric']
+        });
     });
 });
