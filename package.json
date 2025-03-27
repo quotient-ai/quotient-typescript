@@ -1,6 +1,6 @@
 {
-  "name": "quotient-typescript",
-  "version": "1.0.0",
+  "name": "@quotient-ai/quotient-typescript",
+  "version": "0.0.1",
   "description": "TypeScript client for QuotientAI API",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -23,5 +23,24 @@
     "eslint": "^8.56.0",
     "typescript": "^5.3.3",
     "vitest": "^1.3.1"
-  }
+  },
+  "directories": {
+    "src": "quotientai",
+    "example": "examples",
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/quotient-ai/quotient-typescript.git"
+  },
+  "keywords": [
+    "quotient-ai",
+    "ai"
+  ],
+  "author": "quotient-ai",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/quotient-ai/quotient-typescript/issues"
+  },
+  "homepage": "https://github.com/quotient-ai/quotient-typescript#readme"
 }

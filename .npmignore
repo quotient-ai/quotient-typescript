@@ -1,0 +1,8 @@
+tests/
+node_modules/
+coverage/
+.gitignore
+.git/
+.DS_Store
+MAKEFILE
+
