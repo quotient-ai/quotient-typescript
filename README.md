@@ -1,5 +1,5 @@
 # quotient-typescript
-[![npm version](https://img.shields.io/npm/v/quotient-typescript)](https://www.npmjs.com/package/quotient-typescript)
+[![npm version](https://img.shields.io/npm/v/quotient-typescript)](https://www.npmjs.com/package/@quotient-ai/quotient-typescript)
 
 ## Overview
 
