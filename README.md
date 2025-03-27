@@ -1,4 +1,4 @@
-# quotienta
+# quotientai
 [![npm version](https://img.shields.io/npm/v/quotientai)](https://www.npmjs.com/package/quotientai)
 
 ## Overview
