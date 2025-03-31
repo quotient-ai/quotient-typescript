@@ -1,4 +1,5 @@
-import { LogEntry, LoggerConfig } from './types';
+import { LogEntry, LoggerConfig, LogDocument } from './types';
+import { ValidationError } from './exceptions';
 
 interface LogsResource {
   create(params: LogEntry): Promise<any>;
@@ -41,6 +42,44 @@ export class QuotientLogger {
     return Math.random() < this.sampleRate;
   }
 
+  // Type guard function to check if an object is a valid LogDocument
+  private isValidLogDocument(obj: any): obj is LogDocument {
+    try {
+      // Check if it has the required page_content property and it's a string
+      if (!('page_content' in obj) || typeof obj.page_content !== 'string') {
+        return false;
+      }
+      
+      // If metadata exists, check if it's an object
+      if ('metadata' in obj && obj.metadata !== null && typeof obj.metadata !== 'object') {
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  // Validate document format
+  private validateDocuments(documents: (string | LogDocument)[]): void {
+    if (!documents || documents.length === 0) {
+      return;
+    }
+
+    for (const doc of documents) {
+      if (typeof doc === 'string') {
+        continue;
+      } else if (typeof doc === 'object' && doc !== null) {
+        if (!this.isValidLogDocument(doc)) {
+          throw new ValidationError("Documents must be a list of strings or dictionaries with 'page_content' and optional 'metadata' keys. Metadata keys must be strings");
+        }
+      } else {
+        throw new ValidationError(`Documents must be a list of strings or dictionaries with 'page_content' and optional 'metadata' keys, got ${typeof doc}`);
+      }
+    }
+  }
+
   // log a message
   // params: Omit<LogEntry, 'app_name' | 'environment'>
   async log(params: Omit<LogEntry, 'app_name' | 'environment'>): Promise<any> {
@@ -52,25 +91,34 @@ export class QuotientLogger {
       throw new Error('Logger is not properly configured. app_name and environment must be set.');
     }
 
-    // Merge default tags with any tags provided at log time
-    const mergedTags = { ...this.tags, ...(params.tags || {}) };
+    try {
+      // Validate documents format
+      if (params.documents) {
+        this.validateDocuments(params.documents);
+      }
 
-    // Use instance variables as defaults if not provided
-    const hallucinationDetection = params.hallucination_detection ?? this.hallucinationDetection;
-    const inconsistencyDetection = params.inconsistency_detection ?? this.inconsistencyDetection;
+      // Merge default tags with any tags provided at log time
+      const mergedTags = { ...this.tags, ...(params.tags || {}) };
 
-    if (this.shouldSample()) {
-      const response = await this.logsResource.create({
-        ...params,
-        app_name: this.appName,
-        environment: this.environment,
-        tags: mergedTags,
-        hallucination_detection: hallucinationDetection,
-        inconsistency_detection: inconsistencyDetection,
-        hallucination_detection_sample_rate: this.hallucinationDetectionSampleRate,
-      });
+      // Use instance variables as defaults if not provided
+      const hallucinationDetection = params.hallucination_detection ?? this.hallucinationDetection;
+      const inconsistencyDetection = params.inconsistency_detection ?? this.inconsistencyDetection;
 
-      return response;
+      if (this.shouldSample()) {
+        const response = await this.logsResource.create({
+          ...params,
+          app_name: this.appName,
+          environment: this.environment,
+          tags: mergedTags,
+          hallucination_detection: hallucinationDetection,
+          inconsistency_detection: inconsistencyDetection,
+          hallucination_detection_sample_rate: this.hallucinationDetectionSampleRate,
+        });
+
+        return response;
+      }
+    } catch (error) {
+      throw error;
     }
   }
 } 

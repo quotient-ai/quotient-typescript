@@ -1,10 +1,16 @@
-
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
 export class QuotientAIError extends Error {
     constructor(message: string) {
         super(message);
         this.name = 'QuotientAIError';
+    }
+}
+
+export class ValidationError extends QuotientAIError {
+    constructor(message: string) {
+        super(message);
+        this.name = 'ValidationError';
     }
 }
 

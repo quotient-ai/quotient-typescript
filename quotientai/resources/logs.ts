@@ -1,4 +1,5 @@
 import { BaseQuotientClient } from '../client';
+import { LogDocument } from '../types';
 
 interface LogResponse {
     id: string;
@@ -8,7 +9,7 @@ interface LogResponse {
     inconsistency_detection: boolean;
     user_query: string;
     model_output: string;
-    documents: string[];
+    documents: (string | LogDocument)[];
     message_history: any[] | null;
     instructions: string[] | null;
     tags: Record<string, any>;
@@ -26,7 +27,7 @@ interface CreateLogParams {
     inconsistency_detection: boolean;
     user_query: string;
     model_output: string;
-    documents: string[];
+    documents: (string | LogDocument)[];
     message_history?: any[] | null;
     instructions?: string[] | null;
     tags?: Record<string, any>;
@@ -50,7 +51,7 @@ export class Log {
     inconsistency_detection: boolean;
     user_query: string;
     model_output: string;
-    documents: string[];
+    documents: (string | LogDocument)[];
     message_history: any[] | null;
     instructions: string[] | null;
     tags: Record<string, any>;
