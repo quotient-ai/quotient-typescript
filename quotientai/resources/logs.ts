@@ -110,7 +110,7 @@ export class LogsResource {
         if (params.offset !== undefined) queryParams.offset = params.offset;
 
         try {
-            const response = await this.client.get('/logs', { params: queryParams }) as LogsResponse;
+            const response = await this.client.get('/logs', queryParams) as LogsResponse;
             return response.logs.map(logData => new Log(logData));
         } catch (error) {
             console.error('Error listing logs:', error);
