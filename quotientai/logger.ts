@@ -43,21 +43,35 @@ export class QuotientLogger {
   }
 
   // Type guard function to check if an object is a valid LogDocument
-  private isValidLogDocument(obj: any): obj is LogDocument {
+  private isValidLogDocument(obj: any): { valid: boolean; error?: string } {
     try {
-      // Check if it has the required page_content property and it's a string
-      if (!('page_content' in obj) || typeof obj.page_content !== 'string') {
-        return false;
+      // Check if it has the required page_content property
+      if (!('page_content' in obj)) {
+        return { 
+          valid: false, 
+          error: "Missing required 'page_content' property" 
+        };
+      }
+      
+      // Check if page_content is a string
+      if (typeof obj.page_content !== 'string') {
+        return { 
+          valid: false, 
+          error: `The 'page_content' property must be a string, found ${typeof obj.page_content}` 
+        };
       }
       
       // If metadata exists, check if it's an object
       if ('metadata' in obj && obj.metadata !== null && typeof obj.metadata !== 'object') {
-        return false;
+        return { 
+          valid: false, 
+          error: `The 'metadata' property must be an object, found ${typeof obj.metadata}` 
+        };
       }
       
-      return true;
+      return { valid: true };
     } catch (error) {
-      return false;
+      return { valid: false, error: "Unexpected error validating document" };
     }
   }
 
@@ -67,15 +81,24 @@ export class QuotientLogger {
       return;
     }
 
-    for (const doc of documents) {
+    for (let i = 0; i < documents.length; i++) {
+      const doc = documents[i];
       if (typeof doc === 'string') {
         continue;
       } else if (typeof doc === 'object' && doc !== null) {
-        if (!this.isValidLogDocument(doc)) {
-          throw new ValidationError("Documents must be a list of strings or dictionaries with 'page_content' and optional 'metadata' keys. Metadata keys must be strings");
+        const validation = this.isValidLogDocument(doc);
+        if (!validation.valid) {
+          throw new ValidationError(
+            `Invalid document format at index ${i}: ${validation.error}. ` +
+            "Documents must be either strings or JSON objects with a 'page_content' string property and an optional 'metadata' object. " +
+            "To fix this, ensure each document follows the format: { page_content: 'your text content', metadata?: { key: 'value' } }"
+          );
         }
       } else {
-        throw new ValidationError(`Documents must be a list of strings or dictionaries with 'page_content' and optional 'metadata' keys, got ${typeof doc}`);
+        throw new ValidationError(
+          `Invalid document type at index ${i}. Found ${typeof doc}, but documents must be either strings or JSON objects with a 'page_content' property. ` +
+          "To fix this, provide documents as either simple strings or properly formatted objects: { page_content: 'your text content' }"
+        );
       }
     }
   }
@@ -91,34 +114,30 @@ export class QuotientLogger {
       throw new Error('Logger is not properly configured. app_name and environment must be set.');
     }
 
-    try {
-      // Validate documents format
-      if (params.documents) {
-        this.validateDocuments(params.documents);
-      }
+    // Validate documents format
+    if (params.documents) {
+      this.validateDocuments(params.documents);
+    }
 
-      // Merge default tags with any tags provided at log time
-      const mergedTags = { ...this.tags, ...(params.tags || {}) };
+    // Merge default tags with any tags provided at log time
+    const mergedTags = { ...this.tags, ...(params.tags || {}) };
 
-      // Use instance variables as defaults if not provided
-      const hallucinationDetection = params.hallucination_detection ?? this.hallucinationDetection;
-      const inconsistencyDetection = params.inconsistency_detection ?? this.inconsistencyDetection;
+    // Use instance variables as defaults if not provided
+    const hallucinationDetection = params.hallucination_detection ?? this.hallucinationDetection;
+    const inconsistencyDetection = params.inconsistency_detection ?? this.inconsistencyDetection;
 
-      if (this.shouldSample()) {
-        const response = await this.logsResource.create({
-          ...params,
-          app_name: this.appName,
-          environment: this.environment,
-          tags: mergedTags,
-          hallucination_detection: hallucinationDetection,
-          inconsistency_detection: inconsistencyDetection,
-          hallucination_detection_sample_rate: this.hallucinationDetectionSampleRate,
-        });
+    if (this.shouldSample()) {
+      const response = await this.logsResource.create({
+        ...params,
+        app_name: this.appName,
+        environment: this.environment,
+        tags: mergedTags,
+        hallucination_detection: hallucinationDetection,
+        inconsistency_detection: inconsistencyDetection,
+        hallucination_detection_sample_rate: this.hallucinationDetectionSampleRate,
+      });
 
-        return response;
-      }
-    } catch (error) {
-      throw error;
+      return response;
     }
   }
 } 
