@@ -111,6 +111,14 @@ export class LogsResource {
 
         try {
             const response = await this.client.get('/logs', queryParams) as LogsResponse;
+            
+            // Check if response has logs property and it's an array
+            if (!response || !response.logs || !Array.isArray(response.logs)) {
+                console.warn('No logs found. Please check your query parameters and try again.');
+                return [];
+            }
+
+            // Map the logs to Log objects
             return response.logs.map(logData => new Log(logData));
         } catch (error) {
             console.error('Error listing logs:', error);

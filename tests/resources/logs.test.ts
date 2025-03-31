@@ -105,6 +105,46 @@ describe('LogsResource', () => {
         expect(client.get).toHaveBeenCalledWith('/logs', {});
     });
 
+    // Tests for the edge cases in list method (lines 117-119)
+    it('should handle null response from API', async () => {
+        const client = new BaseQuotientClient('test');
+        vi.spyOn(client, 'get').mockResolvedValue(null);
+        const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        
+        const logsResource = new LogsResource(client);
+        const logs = await logsResource.list();
+        
+        expect(logs).toHaveLength(0);
+        expect(consoleSpy).toHaveBeenCalledWith('No logs found. Please check your query parameters and try again.');
+        expect(client.get).toHaveBeenCalledWith('/logs', {});
+    });
+    
+    it('should handle response with missing logs property', async () => {
+        const client = new BaseQuotientClient('test');
+        vi.spyOn(client, 'get').mockResolvedValue({});
+        const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        
+        const logsResource = new LogsResource(client);
+        const logs = await logsResource.list();
+        
+        expect(logs).toHaveLength(0);
+        expect(consoleSpy).toHaveBeenCalledWith('No logs found. Please check your query parameters and try again.');
+        expect(client.get).toHaveBeenCalledWith('/logs', {});
+    });
+    
+    it('should handle response with logs not being an array', async () => {
+        const client = new BaseQuotientClient('test');
+        vi.spyOn(client, 'get').mockResolvedValue({ logs: 'not an array' });
+        const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        
+        const logsResource = new LogsResource(client);
+        const logs = await logsResource.list();
+        
+        expect(logs).toHaveLength(0);
+        expect(consoleSpy).toHaveBeenCalledWith('No logs found. Please check your query parameters and try again.');
+        expect(client.get).toHaveBeenCalledWith('/logs', {});
+    });
+
     it('should create a log', async () => {
         const client = new BaseQuotientClient('test');
         vi.spyOn(client, 'post').mockResolvedValue({
