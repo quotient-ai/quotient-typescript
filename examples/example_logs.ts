@@ -5,7 +5,7 @@ async function main() {
     console.log("QuotientAI client initialized")
 
     // configure the logger
-    quotient.logger.init({
+    const quotient_logger =quotient.logger.init({
         app_name: "my-app",
         environment: "dev",
         sample_rate: 1.0,
@@ -21,7 +21,7 @@ async function main() {
 
     console.log("Preparing to log with quotient_logger")
     try {
-        const response = await quotient.logger.log({
+        const response = await quotient_logger.log({
             user_query: "How do I cook a goose?",
             model_output: "The capital of France is Paris",
             documents: documents,
