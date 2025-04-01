@@ -1,4 +1,5 @@
 import { BaseQuotientClient } from '../client';
+import { LogDocument } from '../types';
 
 interface LogResponse {
     id: string;
@@ -8,7 +9,7 @@ interface LogResponse {
     inconsistency_detection: boolean;
     user_query: string;
     model_output: string;
-    documents: string[];
+    documents: (string | LogDocument)[];
     message_history: any[] | null;
     instructions: string[] | null;
     tags: Record<string, any>;
@@ -26,7 +27,7 @@ interface CreateLogParams {
     inconsistency_detection: boolean;
     user_query: string;
     model_output: string;
-    documents: string[];
+    documents: (string | LogDocument)[];
     message_history?: any[] | null;
     instructions?: string[] | null;
     tags?: Record<string, any>;
@@ -50,7 +51,7 @@ export class Log {
     inconsistency_detection: boolean;
     user_query: string;
     model_output: string;
-    documents: string[];
+    documents: (string | LogDocument)[];
     message_history: any[] | null;
     instructions: string[] | null;
     tags: Record<string, any>;
@@ -109,7 +110,15 @@ export class LogsResource {
         if (params.offset !== undefined) queryParams.offset = params.offset;
 
         try {
-            const response = await this.client.get('/logs', { params: queryParams }) as LogsResponse;
+            const response = await this.client.get('/logs', queryParams) as LogsResponse;
+            
+            // Check if response has logs property and it's an array
+            if (!response || !response.logs || !Array.isArray(response.logs)) {
+                console.warn('No logs found. Please check your query parameters and try again.');
+                return [];
+            }
+
+            // Map the logs to Log objects
             return response.logs.map(logData => new Log(logData));
         } catch (error) {
             console.error('Error listing logs:', error);

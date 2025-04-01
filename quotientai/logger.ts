@@ -1,4 +1,5 @@
-import { LogEntry, LoggerConfig } from './types';
+import { LogEntry, LoggerConfig, LogDocument } from './types';
+import { ValidationError } from './exceptions';
 
 interface LogsResource {
   create(params: LogEntry): Promise<any>;
@@ -41,6 +42,67 @@ export class QuotientLogger {
     return Math.random() < this.sampleRate;
   }
 
+  // Type guard function to check if an object is a valid LogDocument
+  private isValidLogDocument(obj: any): { valid: boolean; error?: string } {
+    try {
+      // Check if it has the required page_content property
+      if (!('page_content' in obj)) {
+        return { 
+          valid: false, 
+          error: "Missing required 'page_content' property" 
+        };
+      }
+      
+      // Check if page_content is a string
+      if (typeof obj.page_content !== 'string') {
+        return { 
+          valid: false, 
+          error: `The 'page_content' property must be a string, found ${typeof obj.page_content}` 
+        };
+      }
+      
+      // If metadata exists, check if it's an object
+      if ('metadata' in obj && obj.metadata !== null && typeof obj.metadata !== 'object') {
+        return { 
+          valid: false, 
+          error: `The 'metadata' property must be an object, found ${typeof obj.metadata}` 
+        };
+      }
+      
+      return { valid: true };
+    } catch (error) {
+      return { valid: false, error: "Unexpected error validating document" };
+    }
+  }
+
+  // Validate document format
+  private validateDocuments(documents: (string | LogDocument)[]): void {
+    if (!documents || documents.length === 0) {
+      return;
+    }
+
+    for (let i = 0; i < documents.length; i++) {
+      const doc = documents[i];
+      if (typeof doc === 'string') {
+        continue;
+      } else if (typeof doc === 'object' && doc !== null) {
+        const validation = this.isValidLogDocument(doc);
+        if (!validation.valid) {
+          throw new ValidationError(
+            `Invalid document format at index ${i}: ${validation.error}. ` +
+            "Documents must be either strings or JSON objects with a 'page_content' string property and an optional 'metadata' object. " +
+            "To fix this, ensure each document follows the format: { page_content: 'your text content', metadata?: { key: 'value' } }"
+          );
+        }
+      } else {
+        throw new ValidationError(
+          `Invalid document type at index ${i}. Found ${typeof doc}, but documents must be either strings or JSON objects with a 'page_content' property. ` +
+          "To fix this, provide documents as either simple strings or properly formatted objects: { page_content: 'your text content' }"
+        );
+      }
+    }
+  }
+
   // log a message
   // params: Omit<LogEntry, 'app_name' | 'environment'>
   async log(params: Omit<LogEntry, 'app_name' | 'environment'>): Promise<any> {
@@ -50,6 +112,11 @@ export class QuotientLogger {
 
     if (!this.appName || !this.environment) {
       throw new Error('Logger is not properly configured. app_name and environment must be set.');
+    }
+
+    // Validate documents format
+    if (params.documents) {
+      this.validateDocuments(params.documents);
     }
 
     // Merge default tags with any tags provided at log time

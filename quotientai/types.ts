@@ -75,12 +75,17 @@ export interface RunResult {
   expected: string;
 }
 
+export interface LogDocument {
+  page_content: string;
+  metadata?: Record<string, any>;
+}
+
 export interface LogEntry {
   app_name: string;
   environment: string;
   user_query: string;
   model_output: string;
-  documents: string[];
+  documents: (string | LogDocument)[];
   message_history?: Array<Record<string, any>> | null; 
   instructions?: string[] | null;
   tags?: Record<string, any>; 
