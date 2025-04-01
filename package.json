@@ -14,7 +14,8 @@
     "build": "tsc",
     "test": "vitest run",
     "coverage": "vitest run --coverage",
-    "lint": "eslint . --ext .ts"
+    "lint": "eslint . --ext .ts",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "axios": "^1.6.7",
