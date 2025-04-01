@@ -16,15 +16,18 @@ async function main() {
     console.log("Logger initialized")
 
     // mock retrieved documents
-    const retrieved_documents = [{"page_content": "Sample document"}]
-    const documents = retrieved_documents.map(doc => doc["page_content"])
+    const retrieved_documents = [
+        "Sample document 1",
+        {"page_content": "Sample document 2", "metadata": {"source": "website.com"}},
+        {"page_content": "Sample document 3"}
+    ]
 
     console.log("Preparing to log with quotient_logger")
     try {
         const response = await quotient.logger.log({
             user_query: "How do I cook a goose?",
             model_output: "The capital of France is Paris",
-            documents: documents,
+            documents: retrieved_documents,
             message_history: [
                 {"role": "system", "content": "You are an expert on geography."},
                 {"role": "user", "content": "What is the capital of France?"},
