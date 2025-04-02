@@ -37,7 +37,7 @@ export class QuotientAI  {
     }
   }
 
-  private initializeResources(client: BaseQuotientClient): void {
+  private initializeResources(client: BaseQuotientClient): void {  
     // Initialize resources
     this.auth = new AuthResource(client);
     this.prompts = new PromptsResource(client);
@@ -47,11 +47,20 @@ export class QuotientAI  {
     this.metrics = new MetricsResource(client);
     this.logs = new LogsResource(client);
 
-    // Authenticate
-    this.auth.authenticate();
-
     // Create an unconfigured logger instance
     this.logger = new QuotientLogger(this.logs as LogsResource);
+
+    // Authenticate
+    try {
+      this.auth.authenticate();
+    } catch (error) {
+      logError(
+        error as Error,
+        'If you are seeing this error, please check that your API key is correct.\n' +
+        'If the issue persists, please contact support@quotientai.co'
+      );
+      return;
+    }
   }
 
   async evaluate(params: {

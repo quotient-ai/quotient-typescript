@@ -145,4 +145,24 @@ describe('QuotientAI', () => {
           metrics: ['test_metric']
         });
     });
+
+    it('should handle authentication errors during initialization', () => {
+        // Mock the authenticate method to throw an error
+        const error = new Error('Authentication failed');
+        mockAuthenticate.mockImplementationOnce(() => {
+            throw error;
+        });
+
+        // Spy on console.error
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+        // Create a new instance
+        const quotient = new QuotientAI('test_api_key');
+        
+        // Verify error was logged with correct message
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+            expect.stringContaining('If you are seeing this error, please check that your API key is correct.')
+        );
+        expect(quotient).toBeDefined();
+    });
 });
