@@ -201,19 +201,15 @@ describe('QuotientLogger', () => {
             
             privateLogger.init({ app_name: 'test_app', environment: 'test_environment' });
             
-            // Create a document that will cause an unexpected error during validation
-            const problematicDoc = new Proxy({}, {
-                get: () => { throw new Error('Unexpected error during validation'); }
-            });
-            
-            await privateLogger.log({
+            const result = await privateLogger.log({
                 user_query: 'test',
                 model_output: 'test',
-                documents: [problematicDoc]
+                documents: [{ not_page_content: 'invalid' }]
             });
             
+            expect(result).toBeNull();
+            expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Missing required \'page_content\' property'));
             expect(mockLogsResource.create).not.toHaveBeenCalled();
-            expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Invalid document format'));
         });
         
         it('should log error and return null when page_content is not a string', async () => {
