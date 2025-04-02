@@ -161,7 +161,7 @@ describe('QuotientAI', () => {
         
         // Verify error was logged with correct message
         expect(consoleErrorSpy).toHaveBeenCalledWith(
-            expect.stringContaining('If you are seeing this error, please check that your API key is correct and that you have access to the QuotientAI API')
+            expect.stringContaining('If you are seeing this error, please check that your API key is correct.')
         );
         expect(quotient).toBeDefined();
     });

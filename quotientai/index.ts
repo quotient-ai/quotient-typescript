@@ -56,7 +56,7 @@ export class QuotientAI  {
     } catch (error) {
       logError(
         error as Error,
-        'If you are seeing this error, please check that your API key is correct and that you have access to the QuotientAI API.\n' +
+        'If you are seeing this error, please check that your API key is correct.\n' +
         'If the issue persists, please contact support@quotientai.co'
       );
       return;
