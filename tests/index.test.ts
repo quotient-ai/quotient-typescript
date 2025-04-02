@@ -52,9 +52,11 @@ describe('QuotientAI', () => {
         expect(BaseQuotientClient).toHaveBeenCalledWith('test_api_key');
     });
 
-    it('should throw an error if no api key is provided', () => {
+    it('should log an error if no api key is provided', () => {
         process.env.QUOTIENT_API_KEY = '';
-        expect(() => new QuotientAI()).toThrow('Could not find API key. Either pass apiKey to QuotientAI() or set the QUOTIENT_API_KEY environment variable. If you do not have an API key, you can create one at https://app.quotientai.co in your settings page');
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        new QuotientAI()
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Could not find API key. Either pass apiKey to QuotientAI() or set the QUOTIENT_API_KEY environment variable. If you do not have an API key, you can create one at https://app.quotientai.co in your settings page'));
     });
     
     it('should call the auth resource on initialization', async () => {
@@ -63,9 +65,10 @@ describe('QuotientAI', () => {
         expect(mockAuthenticate).toHaveBeenCalledOnce();
     });
 
-    it('should raise an error if parameters are invalid', async () => {
+    it('should log an error if parameters are invalid', async () => {
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         const quotientAI = new QuotientAI('test_api_key');
-        await expect(quotientAI.evaluate({
+        await quotientAI.evaluate({
             prompt: {
                 id: 'test_id',
                 name: 'test_name',
@@ -87,7 +90,8 @@ describe('QuotientAI', () => {
                 invalid_param: 'value'
             },
             metrics: ['test_metric']
-        })).rejects.toThrow('Invalid parameters: invalid_param. Valid parameters are: temperature, top_k, top_p, max_tokens');
+        })
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Invalid parameters: invalid_param. Valid parameters are: temperature, top_k, top_p, max_tokens'));
     });
 
     it('should successfully evaluate if all parameters are valid', async () => {

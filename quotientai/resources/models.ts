@@ -1,3 +1,4 @@
+import { logError } from '../exceptions';
 import { BaseQuotientClient } from '../client';
 import { Model, ModelProvider } from '../types';
 
@@ -27,8 +28,12 @@ export class ModelsResource {
 
   // get a model
   // name: string
-  async getModel(name: string): Promise<Model> {
+  async getModel(name: string): Promise<Model | null> {
     const response = await this.client.get(`/models/${name}`) as ModelResponse;
+    if (!response) {
+      logError(new Error(`Model with name ${name} not found. Please check the list of available models using quotient.models.list()`));
+      return null;
+    }
     return {
       ...response,
       created_at: new Date(response.created_at)

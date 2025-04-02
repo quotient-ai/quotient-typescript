@@ -1,5 +1,14 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
+export function logError(error: Error, context?: string) {
+    const timestamp = new Date().toISOString();
+    const contextStr = context ? `[${context}] ` : '';
+    const stack = error.stack || '';
+    
+    console.error(`[${timestamp}] ${contextStr}${error.name}: ${error.message}`);
+    console.error(stack);
+}
+
 export class QuotientAIError extends Error {
     constructor(message: string) {
         super(message);
@@ -79,34 +88,66 @@ export class APITimeoutError extends APIConnectionError {
 
 export class BadRequestError extends APIStatusError {
     status = 400;
+    constructor(message: string, response: AxiosResponse, body?: any) {
+        super(message, response, body);
+        this.name = 'BadRequestError';
+    }
 }
 
 export class AuthenticationError extends APIStatusError {
     status = 401;
+    constructor(message: string, response: AxiosResponse, body?: any) {
+        super(message, response, body);
+        this.name = 'AuthenticationError';
+    }
 }
 
 export class PermissionDeniedError extends APIStatusError {
     status = 403;
+    constructor(message: string, response: AxiosResponse, body?: any) {
+        super(message, response, body);
+        this.name = 'PermissionDeniedError';
+    }
 }
 
 export class NotFoundError extends APIStatusError {
     status = 404;
+    constructor(message: string, response: AxiosResponse, body?: any) {
+        super(message, response, body);
+        this.name = 'NotFoundError';
+    }
 }
 
 export class ConflictError extends APIStatusError {
     status = 409;
+    constructor(message: string, response: AxiosResponse, body?: any) {
+        super(message, response, body);
+        this.name = 'ConflictError';
+    }
 }
 
 export class UnprocessableEntityError extends APIStatusError {
     status = 422;
+    constructor(message: string, response: AxiosResponse, body?: any) {
+        super(message, response, body);
+        this.name = 'UnprocessableEntityError';
+    }
 }
 
 export class RateLimitError extends APIStatusError {
     status = 429;
+    constructor(message: string, response: AxiosResponse, body?: any) {
+        super(message, response, body);
+        this.name = 'RateLimitError';
+    }
 }
 
 export class InternalServerError extends APIStatusError {
     status = 500;
+    constructor(message: string, response: AxiosResponse, body?: any) {
+        super(message, response, body);
+        this.name = 'InternalServerError';
+    }
 }
 
 export function parseUnprocessableEntityError(response: AxiosResponse): string {
@@ -123,9 +164,13 @@ export function parseUnprocessableEntityError(response: AxiosResponse): string {
                 return `missing required fields: ${missingFields.join(', ')}`;
             }
         }
-        throw new APIResponseValidationError(response, body);
+        const error = new APIResponseValidationError(response, body);
+        logError(error, 'parseUnprocessableEntityError');
+        return 'Invalid response format';
     } catch (error) {
-        throw new APIResponseValidationError(response, null);
+        const apiError = new APIResponseValidationError(response, null);
+        logError(apiError, 'parseUnprocessableEntityError');
+        return 'Invalid response format';
     }
 }
 
@@ -135,9 +180,13 @@ export function parseBadRequestError(response: AxiosResponse): string {
         if ('detail' in body) {
             return body.detail;
         }
-        throw new APIResponseValidationError(response, body);
+        const error = new APIResponseValidationError(response, body);
+        logError(error, 'parseBadRequestError');
+        return 'Invalid request format';
     } catch (error) {
-        throw new APIResponseValidationError(response, null);
+        const apiError = new APIResponseValidationError(response, null);
+        logError(apiError, 'parseBadRequestError');
+        return 'Invalid request format';
     }
 }
 
@@ -153,9 +202,9 @@ export function handleErrors() {
                 try {
                     const response = await originalMethod.apply(this, args);
                     return response.data;
-                } catch (error) {
-                    if (axios.isAxiosError(error)) {
-                        const axiosError = error as AxiosError;
+                } catch (err) {
+                    if (axios.isAxiosError(err)) {
+                        const axiosError = err as AxiosError;
 
                         if (axiosError.response) {
                             const { status, data } = axiosError.response;
@@ -163,40 +212,56 @@ export function handleErrors() {
                             switch (status) {
                                 case 400: {
                                     const message = parseBadRequestError(axiosError.response);
-                                    throw new BadRequestError(message, axiosError.response, data);
+                                    const error = new BadRequestError(message, axiosError.response, data);
+                                    logError(error, `${target.constructor.name}.${propertyKey}`);
+                                    return null;
                                 }
-                                case 401:
-                                    throw new AuthenticationError(
+                                case 401: {
+                                    const error = new AuthenticationError(
                                         'unauthorized: the request requires user authentication. ensure your API key is correct.',
                                         axiosError.response,
                                         data
                                     );
-                                case 403:
-                                    throw new PermissionDeniedError(
+                                    logError(error, `${target.constructor.name}.${propertyKey}`);
+                                    return null;
+                                }
+                                case 403: {
+                                    const error = new PermissionDeniedError(
                                         'forbidden: the server understood the request, but it refuses to authorize it.',
                                         axiosError.response,
                                         data
                                     );
-                                case 404:
-                                    throw new NotFoundError(
+                                    logError(error, `${target.constructor.name}.${propertyKey}`);
+                                    return null;
+                                }
+                                case 404: {
+                                    const error = new NotFoundError(
                                         'not found: the server can not find the requested resource.',
                                         axiosError.response,
                                         data
                                     );
+                                    logError(error, `${target.constructor.name}.${propertyKey}`);
+                                    return null;
+                                }
                                 case 422: {
                                     const unprocessableMessage = parseUnprocessableEntityError(axiosError.response);
-                                    throw new UnprocessableEntityError(
+                                    const error = new UnprocessableEntityError(
                                         unprocessableMessage,
                                         axiosError.response,
                                         data
                                     );
+                                    logError(error, `${target.constructor.name}.${propertyKey}`);
+                                    return null;
                                 }
-                                default:
-                                    throw new APIStatusError(
+                                default: {
+                                    const error = new APIStatusError(
                                         `unexpected status code: ${status}. contact support@quotientai.co for help.`,
                                         axiosError.response,
                                         data
                                     );
+                                    logError(error, `${target.constructor.name}.${propertyKey}`);
+                                    return null;
+                                }
                             }
                         }
                             
@@ -207,15 +272,20 @@ export function handleErrors() {
                                 delay *= 2; // Exponential backoff
                                 continue;
                             }
-                            throw new APITimeoutError(axiosError.config);
+                            const error = new APITimeoutError(axiosError.config);
+                            logError(error, `${target.constructor.name}.${propertyKey}`);
+                            return null;
                         }
 
-                        throw new APIConnectionError(
+                        const connectionError = new APIConnectionError(
                             'connection error. please try again later.',
                             axiosError.config || { url: 'unknown' }
                         );
+                        logError(connectionError, `${target.constructor.name}.${propertyKey}`);
+                        return null;
                     }
-                    throw error;
+                    logError(err as Error, `${target.constructor.name}.${propertyKey}`);
+                    return null;
                 }
             }
         };

@@ -50,4 +50,15 @@ describe('ModelsResource', () => {
     expect(getMock).toHaveBeenCalledWith('/models/gpt-4');
   });
   
+  it('should handle null response when getting a model', async () => {
+    const client = new BaseQuotientClient('test');
+    const modelsResource = new ModelsResource(client);
+    const getMock = vi.spyOn(client, 'get');
+    const consoleErrorSpy = vi.spyOn(console, 'error');
+    getMock.mockResolvedValue(null);
+    const model = await modelsResource.getModel('non-existent-model');
+    expect(model).toBeNull();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Model with name non-existent-model not found'));
+    expect(getMock).toHaveBeenCalledWith('/models/non-existent-model');
+  });
 });

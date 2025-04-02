@@ -132,7 +132,7 @@ describe('BaseQuotientClient', () => {
             throw new Error('Failed to read file');
         });
 
-        await privateClient.loadToken();
+        privateClient.loadToken();
 
         // Token should remain null if loading fails
         expect(privateClient.token).toBeNull();
@@ -298,14 +298,20 @@ describe('BaseQuotientClient', () => {
             throw new Error('Permission denied');
         });
 
+        // Spy on console.error
+        const consoleErrorSpy = vi.spyOn(console, 'error');
+
         // Attempt to save token
-        expect(() => 
-            privateClient.saveToken('test_token', Math.floor(Date.now() / 1000) + 3600)
-        ).toThrow('Could not create directory for token');
+        privateClient.saveToken('test_token', Math.floor(Date.now() / 1000) + 3600);
 
         // Verify token is still set in memory even though file save failed
         expect(privateClient.token).toBe('test_token');
         expect(privateClient.tokenExpiry).toBe(Math.floor(Date.now() / 1000) + 3600);
+        
+        // Verify error was logged
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+            expect.stringContaining('Could not create directory for token')
+        );
     });
 
     it('should handle GET requests correctly', async () => {

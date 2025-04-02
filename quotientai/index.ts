@@ -9,29 +9,35 @@ import { ModelsResource } from './resources/models';
 import { RunsResource } from './resources/runs';
 import { MetricsResource } from './resources/metrics';
 import { LogsResource } from './resources/logs';
+import { logError } from './exceptions';
 
-export class QuotientAI {
-  public auth: AuthResource;
-  public prompts: PromptsResource;
-  public datasets: DatasetsResource;
-  public models: ModelsResource;
-  public runs: RunsResource;
-  public metrics: MetricsResource;
-  public logs: LogsResource;
-  public logger: QuotientLogger;
+export class QuotientAI  {
+  public auth: AuthResource = null!;
+  public prompts: PromptsResource = null!;
+  public datasets: DatasetsResource = null!;
+  public models: ModelsResource = null!;
+  public runs: RunsResource = null!;
+  public metrics: MetricsResource = null!;
+  public logs: LogsResource = null!;
+  public logger: QuotientLogger = null!;
 
   constructor(apiKey?: string) {
     const key = apiKey || process.env.QUOTIENT_API_KEY;
     if (!key) {
-      throw new Error(
+      const error = new Error(
         'Could not find API key. Either pass apiKey to QuotientAI() or ' +
         'set the QUOTIENT_API_KEY environment variable. ' +
         'If you do not have an API key, you can create one at https://app.quotientai.co in your settings page'
       );
+      logError(error, 'QuotientAI.constructor');
+      return;
+    } else {
+      const client = new BaseQuotientClient(key);
+      this.initializeResources(client);
     }
+  }
 
-    const client = new BaseQuotientClient(key);
-    
+  private initializeResources(client: BaseQuotientClient): void {
     // Initialize resources
     this.auth = new AuthResource(client);
     this.prompts = new PromptsResource(client);
@@ -64,10 +70,12 @@ export class QuotientAI {
     );
 
     if (invalidParameters.length > 0) {
-      throw new Error(
+      const error = new Error(
         `Invalid parameters: ${invalidParameters.join(', ')}. ` +
         `Valid parameters are: ${validParameters.join(', ')}`
       );
+      logError(error, 'QuotientAI.evaluate');
+      return null;
     }
 
     return this.runs.create({

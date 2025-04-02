@@ -117,4 +117,16 @@ describe('PromptsResource', () => {
         });
         expect(patchMock).toHaveBeenCalledWith('/prompts/test', { id: 'test', name: 'test', system_prompt: 'test', user_prompt: 'test', is_deleted: true });
     });
+
+    it('should handle null response when getting a prompt', async () => {
+        const client = new BaseQuotientClient('test');
+        const promptsResource = new PromptsResource(client);
+        const getMock = vi.spyOn(client, 'get');
+        const consoleErrorSpy = vi.spyOn(console, 'error');
+        getMock.mockResolvedValue(null);
+        const prompt = await promptsResource.getPrompt({ id: 'test' });
+        expect(prompt).toBeNull();
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Error: Prompt not found'));
+        expect(getMock).toHaveBeenCalledWith('/prompts/test');
+    });
 });

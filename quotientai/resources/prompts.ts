@@ -1,3 +1,4 @@
+import { logError } from '../exceptions';
 import { BaseQuotientClient } from '../client';
 import { Prompt } from '../types';
 
@@ -58,12 +59,16 @@ export class PromptsResource {
 
   // get a prompt
   // options: GetPromptParams
-  async getPrompt(options: GetPromptParams): Promise<Prompt> {
+  async getPrompt(options: GetPromptParams): Promise<Prompt | null> {
     let path = `/prompts/${options.id}`;
     if (options.version) {
       path += `/versions/${options.version}`;
     }
     const response = await this.client.get(path) as PromptResponse;
+    if (!response) {
+      logError(new Error('Prompt not found'));
+      return null;
+    }
     return {
       id: response.id,
       name: response.name,

@@ -1,5 +1,5 @@
 import { LogEntry, LoggerConfig, LogDocument } from './types';
-import { ValidationError } from './exceptions';
+import { ValidationError, logError } from './exceptions';
 
 interface LogsResource {
   create(params: LogEntry): Promise<any>;
@@ -32,7 +32,8 @@ export class QuotientLogger {
     this.configured = true;
 
     if (this.sampleRate < 0 || this.sampleRate > 1) {
-      throw new Error('sample_rate must be between 0.0 and 1.0');
+      logError(new Error('sample_rate must be between 0.0 and 1.0'));
+      return this;
     }
 
     return this;
@@ -76,9 +77,9 @@ export class QuotientLogger {
   }
 
   // Validate document format
-  private validateDocuments(documents: (string | LogDocument)[]): void {
+  private validateDocuments(documents: (string | LogDocument)[]): boolean {
     if (!documents || documents.length === 0) {
-      return;
+      return true;
     }
 
     for (let i = 0; i < documents.length; i++) {
@@ -88,35 +89,43 @@ export class QuotientLogger {
       } else if (typeof doc === 'object' && doc !== null) {
         const validation = this.isValidLogDocument(doc);
         if (!validation.valid) {
-          throw new ValidationError(
+          logError(new ValidationError(
             `Invalid document format at index ${i}: ${validation.error}. ` +
             "Documents must be either strings or JSON objects with a 'page_content' string property and an optional 'metadata' object. " +
             "To fix this, ensure each document follows the format: { page_content: 'your text content', metadata?: { key: 'value' } }"
-          );
+          ));
+          return false;
         }
       } else {
-        throw new ValidationError(
+        logError(new ValidationError(
           `Invalid document type at index ${i}. Found ${typeof doc}, but documents must be either strings or JSON objects with a 'page_content' property. ` +
           "To fix this, provide documents as either simple strings or properly formatted objects: { page_content: 'your text content' }"
-        );
+        ));
+        return false;
       }
     }
+    return true;
   }
 
   // log a message
   // params: Omit<LogEntry, 'app_name' | 'environment'>
   async log(params: Omit<LogEntry, 'app_name' | 'environment'>): Promise<any> {
     if (!this.configured) {
-      throw new Error('Logger is not configured. Please call init() before logging.');
+      logError(new Error('Logger is not configured. Please call init() before logging.'));
+      return null;
     }
 
     if (!this.appName || !this.environment) {
-      throw new Error('Logger is not properly configured. app_name and environment must be set.');
+      logError(new Error('Logger is not properly configured. app_name and environment must be set.'));
+      return null;
     }
 
     // Validate documents format
     if (params.documents) {
-      this.validateDocuments(params.documents);
+      const isValid = this.validateDocuments(params.documents);
+      if (!isValid) {
+        return null;
+      }
     }
 
     // Merge default tags with any tags provided at log time

@@ -1,22 +1,23 @@
-
-import { describe, it, expect, vi } from 'vitest';
-import { QuotientAIError, 
-    APIError, 
-    APIResponseValidationError, 
-    APIStatusError, 
-    APIConnectionError, 
-    APITimeoutError, 
-    BadRequestError, 
-    AuthenticationError, 
-    PermissionDeniedError, 
-    NotFoundError, 
-    ConflictError, 
-    UnprocessableEntityError, 
-    RateLimitError, 
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import {
+    QuotientAIError,
+    APIError,
+    APIResponseValidationError,
+    APIStatusError,
+    APIConnectionError,
+    APITimeoutError,
+    BadRequestError,
+    AuthenticationError,
+    PermissionDeniedError,
+    NotFoundError,
+    ConflictError,
+    UnprocessableEntityError,
+    RateLimitError,
     InternalServerError,
     parseUnprocessableEntityError,
     parseBadRequestError,
-    handleErrors } from '../../quotientai/exceptions';
+    handleErrors,
+    logError } from '../../quotientai/exceptions';
 import axios from 'axios';
 
 describe('QuotientAIError', () => {
@@ -156,22 +157,26 @@ describe('Error Parsing Functions', () => {
             expect(message).toBe('missing required fields: name, email');
         });
 
-        it('should throw APIResponseValidationError when detail is not in expected format', () => {
+        it('should handle invalid detail format', () => {
+            const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
             const response = {
                 data: {
                     detail: 'Invalid format'
                 }
             } as any;
-            expect(() => parseUnprocessableEntityError(response))
-                .toThrow(APIResponseValidationError);
+            const message = parseUnprocessableEntityError(response);
+            expect(message).toBe('Invalid response format');
+            expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('APIResponseValidationError'));
         });
 
-        it('should throw APIResponseValidationError when body is invalid', () => {
+        it('should handle invalid body', () => {
+            const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
             const response = {
                 data: null
             } as any;
-            expect(() => parseUnprocessableEntityError(response))
-                .toThrow(APIResponseValidationError);
+            const message = parseUnprocessableEntityError(response);
+            expect(message).toBe('Invalid response format');
+            expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('APIResponseValidationError'));
         });
     });
 
@@ -186,22 +191,26 @@ describe('Error Parsing Functions', () => {
             expect(message).toBe('Invalid input data');
         });
 
-        it('should throw APIResponseValidationError when detail is not present', () => {
+        it('should handle missing detail', () => {
+            const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
             const response = {
                 data: {
                     message: 'Invalid format'
                 }
             } as any;
-            expect(() => parseBadRequestError(response))
-                .toThrow(APIResponseValidationError);
+            const message = parseBadRequestError(response);
+            expect(message).toBe('Invalid request format');
+            expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('APIResponseValidationError'));
         });
 
-        it('should throw APIResponseValidationError when body is invalid', () => {
+        it('should handle invalid body', () => {
+            const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
             const response = {
                 data: null
             } as any;
-            expect(() => parseBadRequestError(response))
-                .toThrow(APIResponseValidationError);
+            const message = parseBadRequestError(response);
+            expect(message).toBe('Invalid request format');
+            expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('APIResponseValidationError'));
         });
     });
 });
@@ -216,6 +225,7 @@ describe('Error Handling', () => {
     });
 
     it('should handle BadRequestError (400)', async () => {
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         const axiosError = {
             isAxiosError: true,
             response: {
@@ -231,10 +241,14 @@ describe('Error Handling', () => {
             value: async () => { throw axiosError; } 
         });
 
-        await expect(descriptor.value()).rejects.toThrow(BadRequestError);
+        const result = await descriptor.value();
+        expect(result).toBeNull();
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('BadRequestError'));
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Invalid request'));
     });
 
     it('should handle AuthenticationError (401)', async () => {
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         const axiosError = {
             isAxiosError: true,
             response: {
@@ -250,10 +264,14 @@ describe('Error Handling', () => {
             value: async () => { throw axiosError; } 
         });
 
-        await expect(descriptor.value()).rejects.toThrow(AuthenticationError);
+        const result = await descriptor.value();
+        expect(result).toBeNull();
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('AuthenticationError'));
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('unauthorized'));
     });
 
     it('should handle PermissionDeniedError (403)', async () => {
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         const axiosError = {
             isAxiosError: true,
             response: {
@@ -269,10 +287,14 @@ describe('Error Handling', () => {
             value: async () => { throw axiosError; } 
         });
 
-        await expect(descriptor.value()).rejects.toThrow(PermissionDeniedError);
+        const result = await descriptor.value();
+        expect(result).toBeNull();
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('PermissionDeniedError'));
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('forbidden'));
     });
 
     it('should handle NotFoundError (404)', async () => {
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         const axiosError = {
             isAxiosError: true,
             response: {
@@ -288,10 +310,14 @@ describe('Error Handling', () => {
             value: async () => { throw axiosError; } 
         });
 
-        await expect(descriptor.value()).rejects.toThrow(NotFoundError);
+        const result = await descriptor.value();
+        expect(result).toBeNull();
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('NotFoundError'));
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('not found'));
     });
 
     it('should handle UnprocessableEntityError (422)', async () => {
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         const axiosError = {
             isAxiosError: true,
             response: {
@@ -311,10 +337,14 @@ describe('Error Handling', () => {
             value: async () => { throw axiosError; } 
         });
 
-        await expect(descriptor.value()).rejects.toThrow(UnprocessableEntityError);
+        const result = await descriptor.value();
+        expect(result).toBeNull();
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('UnprocessableEntityError'));
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('missing required fields'));
     });
 
     it('should handle APITimeoutError with retries', async () => {
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         const axiosError = {
             isAxiosError: true,
             code: 'ECONNABORTED',
@@ -331,11 +361,15 @@ describe('Error Handling', () => {
             } 
         });
 
-        await expect(descriptor.value()).rejects.toThrow(APITimeoutError);
+        const result = await descriptor.value();
+        expect(result).toBeNull();
         expect(attempts).toBe(3); // Should have tried 3 times
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('APITimeoutError'));
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Request timed out'));
     });
 
     it('should handle APIConnectionError', async () => {
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         const axiosError = {
             isAxiosError: true,
             response: null,
@@ -349,13 +383,14 @@ describe('Error Handling', () => {
             value: async () => { throw axiosError; } 
         });
 
-        await expect(descriptor.value()).rejects.toThrow(APIConnectionError);
-        await expect(descriptor.value()).rejects.toMatchObject({
-            message: 'connection error. please try again later.'
-        });
+        const result = await descriptor.value();
+        expect(result).toBeNull();
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('APIConnectionError'));
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('connection error'));
     });
 
     it('should handle Axios error with response but no status code', async () => {
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         const axiosError = {
             isAxiosError: true,
             response: {
@@ -370,15 +405,14 @@ describe('Error Handling', () => {
             value: async () => { throw axiosError; } 
         });
 
-        await expect(descriptor.value()).rejects.toThrow(APIStatusError);
-        await expect(descriptor.value()).rejects.toMatchObject({
-            message: expect.stringContaining('unexpected status code: undefined'),
-            status: undefined,
-            request: { url: 'test', headers: {} }
-        });
+        const result = await descriptor.value();
+        expect(result).toBeNull();
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('APIStatusError'));
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('unexpected status code: undefined'));
     });
 
     it('should handle Axios error with undefined response', async () => {
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         const axiosError = {
             isAxiosError: true,
             response: undefined,
@@ -391,13 +425,14 @@ describe('Error Handling', () => {
             value: async () => { throw axiosError; } 
         });
 
-        await expect(descriptor.value()).rejects.toThrow(APIConnectionError);
-        await expect(descriptor.value()).rejects.toMatchObject({
-            message: 'connection error. please try again later.'
-        });
+        const result = await descriptor.value();
+        expect(result).toBeNull();
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('APIConnectionError'));
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('connection error'));
     });
 
     it('should handle Axios error with undefined config', async () => {
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         const axiosError = {
             isAxiosError: true,
             response: undefined,
@@ -410,14 +445,14 @@ describe('Error Handling', () => {
             value: async () => { throw axiosError; } 
         });
 
-        await expect(descriptor.value()).rejects.toThrow(APIConnectionError);
-        await expect(descriptor.value()).rejects.toMatchObject({
-            message: 'connection error. please try again later.',
-            request: { url: 'unknown' }
-        });
+        const result = await descriptor.value();
+        expect(result).toBeNull();
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('APIConnectionError'));
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('connection error'));
     });
 
     it('should handle Axios error without response property', async () => {
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         const axiosError = {
             isAxiosError: true,
             code: 'NETWORK_ERROR',
@@ -430,14 +465,14 @@ describe('Error Handling', () => {
             value: async () => { throw axiosError; } 
         });
 
-        await expect(descriptor.value()).rejects.toThrow(APIConnectionError);
-        await expect(descriptor.value()).rejects.toMatchObject({
-            message: 'connection error. please try again later.',
-            request: { url: 'test', headers: {} }
-        });
+        const result = await descriptor.value();
+        expect(result).toBeNull();
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('APIConnectionError'));
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('connection error'));
     });
 
     it('should handle Axios error with false response', async () => {
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         const axiosError = {
             isAxiosError: true,
             response: false,
@@ -451,24 +486,27 @@ describe('Error Handling', () => {
             value: async () => { throw axiosError; } 
         });
 
-        await expect(descriptor.value()).rejects.toThrow(APIConnectionError);
-        await expect(descriptor.value()).rejects.toMatchObject({
-            message: 'connection error. please try again later.',
-            request: { url: 'test', headers: {} }
-        });
+        const result = await descriptor.value();
+        expect(result).toBeNull();
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('APIConnectionError'));
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('connection error'));
     });
 
     it('should handle non-axios errors', async () => {
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         const handler = handleErrors();
         const descriptor = handler({}, 'testMethod', { 
             value: async () => { throw new Error('Test error'); } 
         });
         vi.spyOn(axios, 'isAxiosError').mockReturnValue(false);
 
-        await expect(descriptor.value()).rejects.toThrow('Test error');
+        await descriptor.value()
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Test error'));
     });
 
     it('should handle unexpected status codes', async () => {
+        // spy on console.error
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         const axiosError = {
             isAxiosError: true,
             response: {
@@ -484,11 +522,99 @@ describe('Error Handling', () => {
             value: async () => { throw axiosError; } 
         });
 
-        await expect(descriptor.value()).rejects.toThrow(APIStatusError);
-        await expect(descriptor.value()).rejects.toMatchObject({
-            message: expect.stringContaining('unexpected status code: 418'),
-            status: 418
+        await descriptor.value();
+
+        // expect console.error to have been called
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('APIStatusError'));
+        // expect console.error to have been called with the message
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('unexpected status code: 418'));
+    });
+
+    it('should return null when retries reach 0', async () => {
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        const axiosError = {
+            isAxiosError: true,
+            code: 'ECONNABORTED',
+            config: { url: 'test', headers: {} }
+        } as any;
+        vi.spyOn(axios, 'isAxiosError').mockReturnValue(true);
+        
+        let attempts = 0;
+        const handler = handleErrors();
+        const descriptor = handler({}, 'testMethod', { 
+            value: async () => {
+                attempts++;
+                throw axiosError;
+            } 
         });
+
+        // Mock setTimeout to immediately resolve
+        vi.spyOn(global, 'setTimeout').mockImplementation((fn) => {
+            fn();
+            return {} as unknown as NodeJS.Timeout;
+        });
+
+        const result = await descriptor.value();
+        expect(result).toBeNull();
+        expect(attempts).toBe(3); // Should have tried 3 times
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('APITimeoutError'));
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Request timed out'));
+    });
+});
+
+describe('logError', () => {
+    let consoleErrorSpy: any;
+    const mockDate = new Date('2024-01-01T12:00:00.000Z');
+
+    beforeEach(() => {
+        consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        vi.setSystemTime(mockDate);
+    });
+
+    afterEach(() => {
+        consoleErrorSpy.mockRestore();
+        vi.useRealTimers();
+    });
+
+    it('should log error with timestamp and stack trace when no context provided', () => {
+        const error = new Error('Test error');
+        error.stack = 'Error: Test error\n    at Test.stack';
+        
+        logError(error);
+
+        expect(consoleErrorSpy).toHaveBeenCalledWith('[2024-01-01T12:00:00.000Z] Error: Test error');
+        expect(consoleErrorSpy).toHaveBeenCalledWith('Error: Test error\n    at Test.stack');
+    });
+
+    it('should log error with timestamp, context, and stack trace when context provided', () => {
+        const error = new Error('Test error');
+        error.stack = 'Error: Test error\n    at Test.stack';
+        const context = 'TestContext';
+        
+        logError(error, context);
+
+        expect(consoleErrorSpy).toHaveBeenCalledWith('[2024-01-01T12:00:00.000Z] [TestContext] Error: Test error');
+        expect(consoleErrorSpy).toHaveBeenCalledWith('Error: Test error\n    at Test.stack');
+    });
+
+    it('should handle error without stack trace', () => {
+        const error = new Error('Test error');
+        error.stack = '';
+        
+        logError(error);
+
+        expect(consoleErrorSpy).toHaveBeenCalledWith('[2024-01-01T12:00:00.000Z] Error: Test error');
+        expect(consoleErrorSpy).toHaveBeenCalledWith('');
+    });
+
+    it('should handle custom error types', () => {
+        const error = new QuotientAIError('Custom error');
+        error.stack = 'QuotientAIError: Custom error\n    at Test.stack';
+        
+        logError(error);
+
+        expect(consoleErrorSpy).toHaveBeenCalledWith('[2024-01-01T12:00:00.000Z] QuotientAIError: Custom error');
+        expect(consoleErrorSpy).toHaveBeenCalledWith('QuotientAIError: Custom error\n    at Test.stack');
     });
 });
 

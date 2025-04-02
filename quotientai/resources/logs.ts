@@ -1,3 +1,4 @@
+import { logError } from '../exceptions';
 import { BaseQuotientClient } from '../client';
 import { LogDocument } from '../types';
 
@@ -91,9 +92,8 @@ export class LogsResource {
             const response = await this.client.post('/logs', params);
             return response;
         } catch (error) {
-            console.error('Error posting log:', error);
+            logError(error as Error, 'LogsResource.create');
             return null;
-            // Don't throw the error, just log it
         }
     }
 
@@ -121,8 +121,8 @@ export class LogsResource {
             // Map the logs to Log objects
             return response.logs.map(logData => new Log(logData));
         } catch (error) {
-            console.error('Error listing logs:', error);
-            throw error;
+            logError(error as Error, 'LogsResource.list');
+            return [];
         }
     }
 }
