@@ -96,12 +96,16 @@ describe('LogsResource', () => {
 
     it('should handle errors when listing logs', async () => {
         const client = new BaseQuotientClient('test');
-        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        const consoleErrorSpy = vi.spyOn(console, 'error');
         vi.spyOn(client, 'get').mockRejectedValue(new Error('Test error'));
 
         const logsResource = new LogsResource(client);
-        await expect(logsResource.list()).rejects.toThrow('Test error');
-        expect(consoleSpy).toHaveBeenCalledWith('Error listing logs:', expect.any(Error));
+        const result = await logsResource.list();
+        
+        expect(result).toEqual([]);
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+            expect.stringContaining('[LogsResource.list] Error: Test error')
+        );
         expect(client.get).toHaveBeenCalledWith('/logs', {});
     });
 
@@ -189,11 +193,11 @@ describe('LogsResource', () => {
 
     it('should handle errors when creating a log', async () => {
         const client = new BaseQuotientClient('test');
-        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        const consoleErrorSpy = vi.spyOn(console, 'error');
         vi.spyOn(client, 'post').mockRejectedValue(new Error('Test error'));
 
         const logsResource = new LogsResource(client);
-        await logsResource.create({
+        const result = await logsResource.create({
             app_name: 'test-app',
             environment: 'development',
             hallucination_detection: true,
@@ -210,7 +214,10 @@ describe('LogsResource', () => {
             hallucination_detection_sample_rate: 0.5
         });
 
-        expect(consoleSpy).toHaveBeenCalledWith('Error posting log:', expect.any(Error));
+        expect(result).toBeNull();
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+            expect.stringContaining('[LogsResource.create] Error: Test error')
+        );
         expect(client.post).toHaveBeenCalledWith('/logs', {
             app_name: 'test-app',
             environment: 'development',

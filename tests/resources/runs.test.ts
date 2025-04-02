@@ -1,4 +1,3 @@
-
 import { describe, it, expect, vi } from 'vitest';
 import { BaseQuotientClient } from '../../quotientai/client';
 import { RunsResource } from '../../quotientai/resources/runs';
@@ -93,7 +92,7 @@ describe('RunsResource', () => {
         });
     });
 
-    it('should compare runs with different datasets and raise an error', async () => {
+    it('should compare runs with different datasets and log an error', async () => {
         const client = new BaseQuotientClient('test');
         const runsResource = new RunsResource(client);
         
@@ -107,11 +106,17 @@ describe('RunsResource', () => {
             dataset: 'dataset2'
         });
 
-        await expect(runsResource.compare([run1, run2]))
-            .rejects.toThrow('All runs must be on the same dataset to compare them');
+        // Spy on console.error
+        const consoleErrorSpy = vi.spyOn(console, 'error');
+
+        const result = await runsResource.compare([run1, run2]);
+        expect(result).toBeNull();
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+            expect.stringContaining('All runs must be on the same dataset to compare them')
+        );
     });
 
-    it('should compare runs with different prompts and models and raise an error', async () => {
+    it('should compare runs with different prompts and models and log an error', async () => {
         const client = new BaseQuotientClient('test');
         const runsResource = new RunsResource(client);
         
@@ -127,8 +132,14 @@ describe('RunsResource', () => {
             model: 'model2'
         });
 
-        await expect(runsResource.compare([run1, run2]))
-            .rejects.toThrow('All runs must be on the same prompt or model to compare them');
+        // Spy on console.error
+        const consoleErrorSpy = vi.spyOn(console, 'error');
+
+        const result = await runsResource.compare([run1, run2]);
+        expect(result).toBeNull();
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+            expect.stringContaining('All runs must be on the same prompt or model to compare them')
+        );
     });
 
     it('should compare runs with different prompts and the same model', async () => {

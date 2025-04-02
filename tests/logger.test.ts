@@ -1,8 +1,17 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { QuotientLogger } from '../quotientai/logger';
-import { ValidationError } from '../quotientai/exceptions';
 
 describe('QuotientLogger', () => {
+    let consoleErrorSpy: any;
+
+    beforeEach(() => {
+        consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+        consoleErrorSpy.mockRestore();
+    });
+
     it('should initialize without being configured', () => {
         const mockLogsResource = { create: vi.fn(), list: vi.fn() };
         const logger = new QuotientLogger(mockLogsResource);
@@ -59,18 +68,23 @@ describe('QuotientLogger', () => {
         expect(privateLogger.configured).toBe(true);
     });
     
-    it('should raise an error if sample rate is not between 0 and 1', () => {
+    it('should log error and return this if sample rate is not between 0 and 1', () => {
         const mockLogsResource = { create: vi.fn(), list: vi.fn() };
         const logger = new QuotientLogger(mockLogsResource);
         const privateLogger = logger as any;
-        expect(() => privateLogger.init({ sample_rate: 1.5 })).toThrow('sample_rate must be between 0.0 and 1.0');
+        const result = privateLogger.init({ sample_rate: 1.5 });
+        expect(result).toBe(logger);
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('sample_rate must be between 0.0 and 1.0'));
     });
     
-    it('should raise an error if you attempt to log before initializing', async () => {
+    it('should log error and return null if you attempt to log before initializing', async () => {
         const mockLogsResource = { create: vi.fn(), list: vi.fn() };
         const logger = new QuotientLogger(mockLogsResource);
         const privateLogger = logger as any;
-        await expect(privateLogger.log({ message: 'test' })).rejects.toThrow('Logger is not configured. Please call init() before logging.');
+        const result = await privateLogger.log({ message: 'test' });
+        expect(result).toBeNull();
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Logger is not configured'));
+        expect(mockLogsResource.create).not.toHaveBeenCalled();
     });
 
     it('should log a message if initialized', async () => {
@@ -119,7 +133,7 @@ describe('QuotientLogger', () => {
         vi.spyOn(Math, 'random').mockRestore();
     });
 
-    it('should raise an error if required app_name or environment is missing after initialization', async () => {
+    it('should log error and return null if required app_name or environment is missing after initialization', async () => {
         const mockLogsResource = { create: vi.fn(), list: vi.fn() };
         const logger = new QuotientLogger(mockLogsResource);
         const privateLogger = logger as any;
@@ -130,12 +144,18 @@ describe('QuotientLogger', () => {
         privateLogger.appName = null;
         privateLogger.environment = 'test';
         
-        await expect(privateLogger.log({ message: 'test' })).rejects.toThrow('Logger is not properly configured. app_name and environment must be set.');
+        const result1 = await privateLogger.log({ message: 'test' });
+        expect(result1).toBeNull();
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('app_name and environment must be set'));
+        expect(mockLogsResource.create).not.toHaveBeenCalled();
         
         privateLogger.appName = 'test';
         privateLogger.environment = null;
         
-        await expect(privateLogger.log({ message: 'test' })).rejects.toThrow('Logger is not properly configured. app_name and environment must be set.');
+        const result2 = await privateLogger.log({ message: 'test' });
+        expect(result2).toBeNull();
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('app_name and environment must be set'));
+        expect(mockLogsResource.create).not.toHaveBeenCalled();
     });
 
     describe('Document Validation', () => {
@@ -174,67 +194,75 @@ describe('QuotientLogger', () => {
             expect(mockLogsResource.create).toHaveBeenCalled();
         });
         
-        it('should throw ValidationError when document is missing page_content', async () => {
+        it('should log error and return null when document is missing page_content', async () => {
             const mockLogsResource = { create: vi.fn(), list: vi.fn() };
             const logger = new QuotientLogger(mockLogsResource);
             const privateLogger = logger as any;
             
             privateLogger.init({ app_name: 'test_app', environment: 'test_environment' });
             
-            await expect(privateLogger.log({
+            const result = await privateLogger.log({
                 user_query: 'test',
                 model_output: 'test',
                 documents: [{ not_page_content: 'invalid' }]
-            })).rejects.toThrow(ValidationError);
+            });
             
+            expect(result).toBeNull();
+            expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Missing required \'page_content\' property'));
             expect(mockLogsResource.create).not.toHaveBeenCalled();
         });
         
-        it('should throw ValidationError when page_content is not a string', async () => {
+        it('should log error and return null when page_content is not a string', async () => {
             const mockLogsResource = { create: vi.fn(), list: vi.fn() };
             const logger = new QuotientLogger(mockLogsResource);
             const privateLogger = logger as any;
             
             privateLogger.init({ app_name: 'test_app', environment: 'test_environment' });
             
-            await expect(privateLogger.log({
+            const result = await privateLogger.log({
                 user_query: 'test',
                 model_output: 'test',
                 documents: [{ page_content: 123 }]
-            })).rejects.toThrow(ValidationError);
+            });
             
+            expect(result).toBeNull();
+            expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('page_content\' property must be a string'));
             expect(mockLogsResource.create).not.toHaveBeenCalled();
         });
         
-        it('should throw ValidationError when metadata is not an object', async () => {
+        it('should log error and return null when metadata is not an object', async () => {
             const mockLogsResource = { create: vi.fn(), list: vi.fn() };
             const logger = new QuotientLogger(mockLogsResource);
             const privateLogger = logger as any;
             
             privateLogger.init({ app_name: 'test_app', environment: 'test_environment' });
             
-            await expect(privateLogger.log({
+            const result = await privateLogger.log({
                 user_query: 'test',
                 model_output: 'test',
                 documents: [{ page_content: 'Valid content', metadata: 'not an object' }]
-            })).rejects.toThrow(ValidationError);
+            });
             
+            expect(result).toBeNull();
+            expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('metadata\' property must be an object'));
             expect(mockLogsResource.create).not.toHaveBeenCalled();
         });
         
-        it('should throw ValidationError when document is not a string or object', async () => {
+        it('should log error and return null when document is not a string or object', async () => {
             const mockLogsResource = { create: vi.fn(), list: vi.fn() };
             const logger = new QuotientLogger(mockLogsResource);
             const privateLogger = logger as any;
             
             privateLogger.init({ app_name: 'test_app', environment: 'test_environment' });
             
-            await expect(privateLogger.log({
+            const result = await privateLogger.log({
                 user_query: 'test',
                 model_output: 'test',
                 documents: [123]
-            })).rejects.toThrow(ValidationError);
+            });
             
+            expect(result).toBeNull();
+            expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('documents must be either strings or JSON objects'));
             expect(mockLogsResource.create).not.toHaveBeenCalled();
         });
         
@@ -245,18 +273,19 @@ describe('QuotientLogger', () => {
             
             privateLogger.init({ app_name: 'test_app', environment: 'test_environment' });
             
-            // Create a scenario where isValidLogDocument throws an error
-            const malformedObj = Object.create(null);
-            Object.defineProperty(malformedObj, 'page_content', {
+            // Create a malformed object that will cause an error during validation
+            const malformedObj = new Proxy({}, {
                 get: () => { throw new Error('Unexpected error'); }
             });
             
-            await expect(privateLogger.log({
+            const result = await privateLogger.log({
                 user_query: 'test',
                 model_output: 'test',
                 documents: [malformedObj]
-            })).rejects.toThrow(ValidationError);
+            });
             
+            expect(result).toBeNull();
+            expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('ValidationError: Invalid document format'));
             expect(mockLogsResource.create).not.toHaveBeenCalled();
         });
     });

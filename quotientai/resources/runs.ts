@@ -1,3 +1,4 @@
+import { logError } from '../exceptions';
 import { BaseQuotientClient } from '../client';
 import { RunResult, Prompt, Dataset, Model } from '../types';
 
@@ -147,12 +148,14 @@ export class RunsResource {
         }
 
         if (new Set(runs.map(run => run.dataset)).size > 1) {
-            throw new Error("All runs must be on the same dataset to compare them");
+            logError(new Error("All runs must be on the same dataset to compare them"));
+            return null;
         }
 
         if (new Set(runs.map(run => run.prompt)).size > 1 && 
             new Set(runs.map(run => run.model)).size > 1) {
-            throw new Error("All runs must be on the same prompt or model to compare them");
+            logError(new Error("All runs must be on the same prompt or model to compare them"));
+            return null;
         }
 
         const summaries = runs.map(run => run.summarize());

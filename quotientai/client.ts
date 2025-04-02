@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { TokenData } from './types';
-import { QuotientAIError } from './exceptions';
+import { logError, QuotientAIError } from './exceptions';
 
 export class BaseQuotientClient {
   private apiKey: string;
@@ -76,7 +76,7 @@ export class BaseQuotientClient {
         JSON.stringify({ token, expires_at: expiry })
       );
     } catch (error) {
-      throw new QuotientAIError('Could not create directory for token. If you see this error please notify us at contact@quotientai.co');
+      logError(new QuotientAIError('Could not create directory for token. If you see this error please notify us at contact@quotientai.co'));
     }
   }
 

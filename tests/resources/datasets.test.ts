@@ -515,7 +515,7 @@ describe('DatasetsResource', () => {
 
     expect(dataset).toBeDefined();
     
-    expect(dataset.rows).toEqual([
+    expect(dataset?.rows).toEqual([
         {
             id: 'new_row_id',
             input: 'test input',
@@ -599,7 +599,7 @@ describe('DatasetsResource', () => {
 
     expect(dataset).toBeDefined();
     
-    expect(dataset.rows).toEqual([
+    expect(dataset?.rows).toEqual([
       {
         id: 'existing_row_id',
         input: 'test input',
@@ -813,12 +813,13 @@ describe('DatasetsResource', () => {
 
   it('should fail if batch size is one and the initial request fails', async () => {
     const client = new BaseQuotientClient('test');
+    const consoleErrorSpy = vi.spyOn(console, 'error');
 
     const postMock = vi.spyOn(client, 'post');
     postMock.mockRejectedValue(new Error('Test error'));
 
     const datasetsResource = new DatasetsResource(client);
-    await expect(datasetsResource.batchCreateRows('test_id', [{
+    const result = await datasetsResource.batchCreateRows('test_id', [{
       input: 'test input',
       context: 'test context',
       expected: 'test expected',
@@ -826,8 +827,57 @@ describe('DatasetsResource', () => {
         annotation: 'test annotation',
         annotation_note: 'test note'
       }
-    }], [], 1)).rejects.toThrow('Test error');
+    }], [], 1);
 
+    expect(result).toEqual([]);
+    expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('[DatasetsResource.batchCreateRows] Error: Test error'));
+    expect(postMock).toHaveBeenCalledWith('/datasets/test_id/dataset_rows/batch', {
+      rows: expect.any(Array)
+    });
+    expect(postMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('should handle missing rows when appending to a dataset', async () => {
+    const client = new BaseQuotientClient('test');
+    const consoleErrorSpy = vi.spyOn(console, 'error');
+    const mockDate = new Date('2024-01-01').toISOString();
+
+    const datasetsResource = new DatasetsResource(client);
+    const result = await datasetsResource.append({
+      dataset: {
+        id: 'test_id',
+        name: 'test_dataset',
+        created_by: 'test_user',
+        created_at: new Date(mockDate),
+        updated_at: new Date(mockDate),
+        description: 'test description'
+      }
+    });
+
+    expect(result).toBeNull();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Error: rows are required'));
+  });
+
+  it('should handle batch creation failure with size 1', async () => {
+    const client = new BaseQuotientClient('test');
+    const consoleErrorSpy = vi.spyOn(console, 'error');
+
+    const postMock = vi.spyOn(client, 'post');
+    postMock.mockRejectedValue(new Error('Test error'));
+
+    const datasetsResource = new DatasetsResource(client);
+    const result = await datasetsResource.batchCreateRows('test_id', [{
+      input: 'test input',
+      context: 'test context',
+      expected: 'test expected',
+      metadata: {
+        annotation: 'test annotation',
+        annotation_note: 'test note'
+      }
+    }], [], 1);
+
+    expect(result).toEqual([]);
+    expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('[DatasetsResource.batchCreateRows] Error: Test error'));
     expect(postMock).toHaveBeenCalledWith('/datasets/test_id/dataset_rows/batch', {
       rows: expect.any(Array)
     });

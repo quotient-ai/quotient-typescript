@@ -1,6 +1,6 @@
 import { BaseQuotientClient } from '../client';
 import { Dataset, DatasetRow, DatasetRowMetadata } from '../types';
-
+import { logError } from '../exceptions';
 export interface DatasetRowResponse {
   id: string;
   input: string;
@@ -228,9 +228,10 @@ export class DatasetsResource {
 
   // append rows to a dataset
   // options: AppendDatasetParams
-  async append(options: AppendDatasetParams): Promise<Dataset> {
+  async append(options: AppendDatasetParams): Promise<Dataset | null> {
     if (!options.rows) {
-      throw new Error('rows are required');
+      logError(new Error('rows are required'));
+      return null;
     }
     const rowResponses: DatasetRowResponse[] = [];
     let datasetRows: DatasetRow[] = [];
@@ -299,7 +300,8 @@ export class DatasetsResource {
       } catch (e) {
         // If batch create fails, divide batch size by two and try recursively
         if (batchSize === 1) {
-          throw e;
+          logError(e as Error, 'DatasetsResource.batchCreateRows');
+          return [];
         } else {
           await this.batchCreateRows(datasetID, batch, rowResponses, Math.floor(batchSize / 2));
         }
