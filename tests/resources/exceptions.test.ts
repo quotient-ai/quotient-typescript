@@ -1,17 +1,18 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { QuotientAIError, 
-    APIError, 
-    APIResponseValidationError, 
-    APIStatusError, 
-    APIConnectionError, 
-    APITimeoutError, 
-    BadRequestError, 
-    AuthenticationError, 
-    PermissionDeniedError, 
-    NotFoundError, 
-    ConflictError, 
-    UnprocessableEntityError, 
-    RateLimitError, 
+import {
+    QuotientAIError,
+    APIError,
+    APIResponseValidationError,
+    APIStatusError,
+    APIConnectionError,
+    APITimeoutError,
+    BadRequestError,
+    AuthenticationError,
+    PermissionDeniedError,
+    NotFoundError,
+    ConflictError,
+    UnprocessableEntityError,
+    RateLimitError,
     InternalServerError,
     parseUnprocessableEntityError,
     parseBadRequestError,
@@ -527,6 +528,37 @@ describe('Error Handling', () => {
         expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('APIStatusError'));
         // expect console.error to have been called with the message
         expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('unexpected status code: 418'));
+    });
+
+    it('should return null when retries reach 0', async () => {
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        const axiosError = {
+            isAxiosError: true,
+            code: 'ECONNABORTED',
+            config: { url: 'test', headers: {} }
+        } as any;
+        vi.spyOn(axios, 'isAxiosError').mockReturnValue(true);
+        
+        let attempts = 0;
+        const handler = handleErrors();
+        const descriptor = handler({}, 'testMethod', { 
+            value: async () => {
+                attempts++;
+                throw axiosError;
+            } 
+        });
+
+        // Mock setTimeout to immediately resolve
+        vi.spyOn(global, 'setTimeout').mockImplementation((fn) => {
+            fn();
+            return {} as unknown as NodeJS.Timeout;
+        });
+
+        const result = await descriptor.value();
+        expect(result).toBeNull();
+        expect(attempts).toBe(3); // Should have tried 3 times
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('APITimeoutError'));
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Request timed out'));
     });
 });
 

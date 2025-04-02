@@ -288,7 +288,6 @@ export function handleErrors() {
                     return null;
                 }
             }
-            return null;
         };
 
         return descriptor;
