@@ -3,6 +3,7 @@ import { BaseQuotientClient } from './client';
 export interface TokenData {
   token: string;
   expires_at: number;
+  api_key: string;
 }
 
 export interface AuthResponse {
