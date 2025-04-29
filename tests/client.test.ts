@@ -150,31 +150,31 @@ describe('BaseQuotientClient', () => {
         // Test valid token
         privateClient.token = 'valid_token';
         privateClient.tokenExpiry = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
-        privateClient.tokenAPiKey = 'test_api_key';
+        privateClient.tokenApiKey = 'test_api_key';
         expect(privateClient.isTokenValid()).toBe(true);
         
         // Test expired token
         privateClient.token = 'expired_token';
         privateClient.tokenExpiry = Math.floor(Date.now() / 1000) - 3600; // 1 hour ago
-        privateClient.tokenAPiKey = 'test_api_key';
+        privateClient.tokenApiKey = 'test_api_key';
         expect(privateClient.isTokenValid()).toBe(false);
         
         // Test token expiring soon (within 5-minute buffer)
         privateClient.token = 'expiring_token';
         privateClient.tokenExpiry = Math.floor(Date.now() / 1000) + 240; // 4 minutes from now
-        privateClient.tokenAPiKey = 'test_api_key';
+        privateClient.tokenApiKey = 'test_api_key';
         expect(privateClient.isTokenValid()).toBe(false);
         
         // Test null token
         privateClient.token = null;
         privateClient.tokenExpiry = Math.floor(Date.now() / 1000) + 3600;
-        privateClient.tokenAPiKey = 'test_api_key';
+        privateClient.tokenApiKey = 'test_api_key';
         expect(privateClient.isTokenValid()).toBe(false);
 
         // Test different API key
         privateClient.token = 'valid_token';
         privateClient.tokenExpiry = Math.floor(Date.now() / 1000) + 3600;
-        privateClient.tokenAPiKey = 'different_api_key';
+        privateClient.tokenApiKey = 'different_api_key';
         expect(privateClient.isTokenValid()).toBe(false);
 
         // Restore original loadToken
@@ -192,35 +192,35 @@ describe('BaseQuotientClient', () => {
         // Test valid token
         privateClient.token = 'valid_token';
         privateClient.tokenExpiry = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
-        privateClient.tokenAPiKey = 'test_api_key';
+        privateClient.tokenApiKey = 'test_api_key';
         privateClient.updateAuthHeader();
         expect(privateClient.client.defaults.headers.common['Authorization']).toBe('Bearer valid_token');
         
         // Test expired token
         privateClient.token = 'expired_token';
         privateClient.tokenExpiry = Math.floor(Date.now() / 1000) - 3600; // 1 hour ago
-        privateClient.tokenAPiKey = 'test_api_key';
+        privateClient.tokenApiKey = 'test_api_key';
         privateClient.updateAuthHeader();
         expect(privateClient.client.defaults.headers.common['Authorization']).toBe('Bearer test_api_key');
         
         // Test null token
         privateClient.token = null;
         privateClient.tokenExpiry = Math.floor(Date.now() / 1000) + 3600;
-        privateClient.tokenAPiKey = 'test_api_key';
+        privateClient.tokenApiKey = 'test_api_key';
         privateClient.updateAuthHeader();
         expect(privateClient.client.defaults.headers.common['Authorization']).toBe('Bearer test_api_key');
         
         // Test token expiring soon (within 5-minute buffer)
         privateClient.token = 'expiring_token';
         privateClient.tokenExpiry = Math.floor(Date.now() / 1000) + 240; // 4 minutes from now
-        privateClient.tokenAPiKey = 'test_api_key';
+        privateClient.tokenApiKey = 'test_api_key';
         privateClient.updateAuthHeader();
         expect(privateClient.client.defaults.headers.common['Authorization']).toBe('Bearer test_api_key');
 
         // Test different API key
         privateClient.token = 'valid_token';
         privateClient.tokenExpiry = Math.floor(Date.now() / 1000) + 3600;
-        privateClient.tokenAPiKey = 'different_api_key';
+        privateClient.tokenApiKey = 'different_api_key';
         privateClient.updateAuthHeader();
         expect(privateClient.client.defaults.headers.common['Authorization']).toBe('Bearer test_api_key');
 
@@ -280,7 +280,7 @@ describe('BaseQuotientClient', () => {
         
         expect(privateClient.token).toBe('valid_jwt_token');
         expect(privateClient.tokenExpiry).toBe(mockExpiry);
-        expect(privateClient.tokenAPiKey).toBe('test_api_key');
+        expect(privateClient.tokenApiKey).toBe('test_api_key');
     });
 
     it('should handle JWT tokens without expiration', async () => {
@@ -311,7 +311,7 @@ describe('BaseQuotientClient', () => {
         expect(privateClient.token).toBe('token_without_exp');
         // Should default to 1 hour from now
         expect(privateClient.tokenExpiry).toBeGreaterThanOrEqual(beforeTime + 3600);
-        expect(privateClient.tokenAPiKey).toBe('test_api_key');
+        expect(privateClient.tokenApiKey).toBe('test_api_key');
     });
 
     it('should handle JWT decode failures', async () => {
