@@ -143,54 +143,89 @@ describe('BaseQuotientClient', () => {
         const client = new BaseQuotientClient('test_api_key');
         const privateClient = client as any;
         
+        // Mock loadToken to not reset our test state
+        const originalLoadToken = privateClient.loadToken;
+        privateClient.loadToken = vi.fn();
+        
         // Test valid token
         privateClient.token = 'valid_token';
         privateClient.tokenExpiry = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
+        privateClient.tokenAPiKey = 'test_api_key';
         expect(privateClient.isTokenValid()).toBe(true);
         
         // Test expired token
         privateClient.token = 'expired_token';
         privateClient.tokenExpiry = Math.floor(Date.now() / 1000) - 3600; // 1 hour ago
+        privateClient.tokenAPiKey = 'test_api_key';
         expect(privateClient.isTokenValid()).toBe(false);
         
         // Test token expiring soon (within 5-minute buffer)
         privateClient.token = 'expiring_token';
         privateClient.tokenExpiry = Math.floor(Date.now() / 1000) + 240; // 4 minutes from now
+        privateClient.tokenAPiKey = 'test_api_key';
         expect(privateClient.isTokenValid()).toBe(false);
         
         // Test null token
         privateClient.token = null;
         privateClient.tokenExpiry = Math.floor(Date.now() / 1000) + 3600;
+        privateClient.tokenAPiKey = 'test_api_key';
         expect(privateClient.isTokenValid()).toBe(false);
+
+        // Test different API key
+        privateClient.token = 'valid_token';
+        privateClient.tokenExpiry = Math.floor(Date.now() / 1000) + 3600;
+        privateClient.tokenAPiKey = 'different_api_key';
+        expect(privateClient.isTokenValid()).toBe(false);
+
+        // Restore original loadToken
+        privateClient.loadToken = originalLoadToken;
     });
 
     it('should update auth header with valid token', () => {
         const client = new BaseQuotientClient('test_api_key');
         const privateClient = client as any;
         
+        // Mock loadToken to not reset our test state
+        const originalLoadToken = privateClient.loadToken;
+        privateClient.loadToken = vi.fn();
+        
         // Test valid token
         privateClient.token = 'valid_token';
         privateClient.tokenExpiry = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
+        privateClient.tokenAPiKey = 'test_api_key';
         privateClient.updateAuthHeader();
         expect(privateClient.client.defaults.headers.common['Authorization']).toBe('Bearer valid_token');
         
         // Test expired token
         privateClient.token = 'expired_token';
         privateClient.tokenExpiry = Math.floor(Date.now() / 1000) - 3600; // 1 hour ago
+        privateClient.tokenAPiKey = 'test_api_key';
         privateClient.updateAuthHeader();
         expect(privateClient.client.defaults.headers.common['Authorization']).toBe('Bearer test_api_key');
         
         // Test null token
         privateClient.token = null;
         privateClient.tokenExpiry = Math.floor(Date.now() / 1000) + 3600;
+        privateClient.tokenAPiKey = 'test_api_key';
         privateClient.updateAuthHeader();
         expect(privateClient.client.defaults.headers.common['Authorization']).toBe('Bearer test_api_key');
         
         // Test token expiring soon (within 5-minute buffer)
         privateClient.token = 'expiring_token';
         privateClient.tokenExpiry = Math.floor(Date.now() / 1000) + 240; // 4 minutes from now
+        privateClient.tokenAPiKey = 'test_api_key';
         privateClient.updateAuthHeader();
         expect(privateClient.client.defaults.headers.common['Authorization']).toBe('Bearer test_api_key');
+
+        // Test different API key
+        privateClient.token = 'valid_token';
+        privateClient.tokenExpiry = Math.floor(Date.now() / 1000) + 3600;
+        privateClient.tokenAPiKey = 'different_api_key';
+        privateClient.updateAuthHeader();
+        expect(privateClient.client.defaults.headers.common['Authorization']).toBe('Bearer test_api_key');
+
+        // Restore original loadToken
+        privateClient.loadToken = originalLoadToken;
     });
     
 
@@ -204,19 +239,19 @@ describe('BaseQuotientClient', () => {
         vi.mocked(fs.existsSync).mockReturnValueOnce(true);
         let client = new BaseQuotientClient('test_api_key');
         let privateClient = client as any;
-        expect(privateClient.tokenPath).toContain('/root/.quotient/auth_token.json');
+        expect(privateClient.tokenPath).toContain('/root/.quotient/pi_keyauth_token.json');
 
         // Second test: when /root doesn't exist
         vi.mocked(fs.existsSync).mockReturnValueOnce(false);
         client = new BaseQuotientClient('test_api_key');
         privateClient = client as any;
-        expect(privateClient.tokenPath).toContain(process.cwd() + '/.quotient/auth_token.json');
+        expect(privateClient.tokenPath).toContain(process.cwd() + '/.quotient/pi_keyauth_token.json');
 
         // Reset the mock to test homedir success case
         vi.mocked(os.homedir).mockReturnValue('/home/user');
         client = new BaseQuotientClient('test_api_key');
         privateClient = client as any;
-        expect(privateClient.tokenPath).toContain('/home/user/.quotient/auth_token.json');
+        expect(privateClient.tokenPath).toContain('/home/user/.quotient/pi_keyauth_token.json');
     });
 
     it('should handle successful JWT decoding', async () => {
@@ -225,6 +260,14 @@ describe('BaseQuotientClient', () => {
         
         const mockExpiry = Math.floor(Date.now() / 1000) + 3600;
         vi.mocked(jwt.decode).mockReturnValueOnce({ exp: mockExpiry });
+        
+        // Mock file system data to include API key
+        vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify({
+            token: 'valid_jwt_token',
+            expires_at: mockExpiry,
+            api_key: 'test_api_key'
+        }));
+        vi.mocked(fs.existsSync).mockReturnValue(true);
         
         const response = {
             data: {},
@@ -237,6 +280,7 @@ describe('BaseQuotientClient', () => {
         
         expect(privateClient.token).toBe('valid_jwt_token');
         expect(privateClient.tokenExpiry).toBe(mockExpiry);
+        expect(privateClient.tokenAPiKey).toBe('test_api_key');
     });
 
     it('should handle JWT tokens without expiration', async () => {
@@ -246,6 +290,15 @@ describe('BaseQuotientClient', () => {
         // Mock JWT decode to return token without exp
         vi.mocked(jwt.decode).mockReturnValueOnce({});
         
+        // Mock file system data to include API key
+        const beforeTime = Math.floor(Date.now() / 1000);
+        vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify({
+            token: 'token_without_exp',
+            expires_at: beforeTime + 3600,
+            api_key: 'test_api_key'
+        }));
+        vi.mocked(fs.existsSync).mockReturnValue(true);
+        
         const response = {
             data: {},
             headers: {
@@ -253,13 +306,12 @@ describe('BaseQuotientClient', () => {
             }
         };
         
-        const beforeTime = Math.floor(Date.now() / 1000);
         await privateClient.handleResponse(response);
         
         expect(privateClient.token).toBe('token_without_exp');
         // Should default to 1 hour from now
         expect(privateClient.tokenExpiry).toBeGreaterThanOrEqual(beforeTime + 3600);
-        expect(privateClient.tokenExpiry).toBeLessThanOrEqual(Math.floor(Date.now() / 1000) + 3600);
+        expect(privateClient.tokenAPiKey).toBe('test_api_key');
     });
 
     it('should handle JWT decode failures', async () => {

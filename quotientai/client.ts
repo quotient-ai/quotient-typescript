@@ -11,6 +11,7 @@ export class BaseQuotientClient {
   private token: string | null = null;
   private tokenExpiry: number = 0;
   private tokenPath: string;
+  private tokenApiKey: string | null = null;
   public client: AxiosInstance;
 
   constructor(apiKey: string) {
@@ -28,7 +29,9 @@ export class BaseQuotientClient {
       }
     }
 
-    this.tokenPath = path.join(tokenDir, '.quotient', 'auth_token.json');
+    // get the last six characters of the api key
+    const apiKeyHash = this.apiKey ? this.apiKey.slice(-6) : '';
+    this.tokenPath = path.join(tokenDir, '.quotient', apiKeyHash + 'auth_token.json');
 
     // Initialize axios instance
     this.client = axios.create({
@@ -57,6 +60,7 @@ export class BaseQuotientClient {
       const data = JSON.parse(fs.readFileSync(this.tokenPath, 'utf-8')) as TokenData;
       this.token = data.token;
       this.tokenExpiry = data.expires_at;
+      this.tokenApiKey = data.api_key;
     } catch {
       // If loading fails, token remains null
     }
@@ -73,7 +77,7 @@ export class BaseQuotientClient {
       // Save to disk
       fs.writeFileSync(
         this.tokenPath,
-        JSON.stringify({ token, expires_at: expiry })
+        JSON.stringify({ token, expires_at: expiry, api_key: this.apiKey })
       );
     } catch (error) {
       logError(new QuotientAIError('Could not create directory for token. If you see this error please notify us at contact@quotientai.co'));
@@ -81,7 +85,13 @@ export class BaseQuotientClient {
   }
 
   private isTokenValid(): boolean {
+    this.loadToken();
+
     if (!this.token) {
+      return false;
+    }
+
+    if (this.tokenApiKey !== this.apiKey) {
       return false;
     }
 
