@@ -1,6 +1,6 @@
 {
   "name": "quotientai",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "TypeScript client for QuotientAI API",
   "main": "dist/quotientai/index.js",
   "types": "dist/quotientai/index.d.ts",
