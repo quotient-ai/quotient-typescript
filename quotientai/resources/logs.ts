@@ -1,6 +1,22 @@
 import { logError } from '../exceptions';
 import { BaseQuotientClient } from '../client';
-import { LogDocument, DetectionResultsResponse, DetectionResults, Evaluation, LogDetail, DocumentLog, LogMessageHistory, LogInstruction, DocumentEvaluation, MessageHistoryEvaluation, InstructionEvaluation, FullDocContextEvaluation, DocumentEvaluationResponse, MessageHistoryEvaluationResponse, InstructionEvaluationResponse, FullDocContextEvaluationResponse } from '../types';
+import { 
+    LogDocument, 
+    DetectionResultsResponse, 
+    DetectionResults, 
+    Evaluation, 
+    LogDetail, 
+    DocumentLog, 
+    LogMessageHistory, 
+    LogInstruction, 
+    DocumentEvaluation, 
+    MessageHistoryEvaluation, 
+    InstructionEvaluation, 
+    FullDocContextEvaluation, 
+    DocumentEvaluationResponse, 
+    MessageHistoryEvaluationResponse, 
+    InstructionEvaluationResponse
+} from '../types';
 
 // Snake case interface for API responses
 interface LogResponse {
