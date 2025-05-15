@@ -1,4 +1,5 @@
 # quotientai
+
 [![npm version](https://img.shields.io/npm/v/quotientai)](https://www.npmjs.com/package/quotientai)
 
 ## Overview
@@ -16,7 +17,14 @@ npm install quotientai
 Create an API key on Quotient and set it as an environment variable called `QUOTIENT_API_KEY`. Then check out the examples in the `examples/` directory or see our [docs](https://docs.quotientai.co) for a more comprehensive walkthrough.
 
 The examples directory contains:
+
 - `example_logs.ts` - Logging with hallucination and inconsistency detection
+
+run the example
+
+```typescript
+QUOTIENT_API_KEY={{YOUR_API_KEY}} ts-node examples/example_logs.ts
+```
 
 ### QuotientAI
 
@@ -83,11 +91,11 @@ The SDK provides strongly-typed interfaces for working with detection results:
 
 ```typescript
 interface DetectionResults {
-  log: LogDetail;                           // Main log information
-  logDocuments: DocumentLog[] | null;       // Reference documents
+  log: LogDetail; // Main log information
+  logDocuments: DocumentLog[] | null; // Reference documents
   logMessageHistory: LogMessageHistory[] | null; // Conversation history
   logInstructions: LogInstruction[] | null; // System instructions
-  evaluations: Evaluation[];                // Hallucination evaluations
+  evaluations: Evaluation[]; // Hallucination evaluations
 }
 ```
 
@@ -122,4 +130,4 @@ try {
 
 ## License
 
-MIT 
+MIT
