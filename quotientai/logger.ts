@@ -162,8 +162,8 @@ export class QuotientLogger {
     }
   }
 
-  // poll for the detection results using log id
-  async pollForDetectionResults(
+  // poll for detection results using log id
+  async pollForDetections(
     logId: string,
     timeout: number = 300,
     pollInterval: number = 2.0
