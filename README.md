@@ -21,7 +21,7 @@ Send your first log and detect hallucinations. Run the code below and see your L
 ```typescript
 import { QuotientAI } from 'quotientai';
 
-const quotient = new QuotientAI();
+const quotient = new QuotientAI(apiKey?: string);
 
 // initialize the logger
 const quotientLogger = quotient.logger.init({
@@ -42,6 +42,18 @@ const logId = await quotientLogger.log({
 // optionally, you can poll for detection results for further actions
 const detectionResults = await quotientLogger.pollForDetections(logId);
 ```
+
+### QuotientAI Client
+
+The main client class that provides access to all QuotientAI resources.
+
+#### Constructor
+
+```typescript
+new QuotientAI(apiKey?: string)
+```
+
+- `apiKey`: Optional API key. If not provided, will attempt to read from `QUOTIENT_API_KEY` environment variable.
 
 ## Docs
 
