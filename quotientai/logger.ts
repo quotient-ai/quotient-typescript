@@ -1,9 +1,10 @@
-import { LogEntry, LoggerConfig, LogDocument } from './types';
+import { LogEntry, LoggerConfig, LogDocument, LOG_STATUS, DetectionResults } from './types';
 import { ValidationError, logError } from './exceptions';
-
+import { v4 as uuidv4 } from 'uuid';
 interface LogsResource {
   create(params: LogEntry): Promise<any>;
   list(): Promise<LogEntry[]>;
+  getDetections(logId: string): Promise<any>;
 }
 
 export class QuotientLogger {
@@ -22,17 +23,17 @@ export class QuotientLogger {
   }
 
   init(config: LoggerConfig): QuotientLogger {
-    this.appName = config.app_name;
+    this.appName = config.appName;
     this.environment = config.environment;
     this.tags = config.tags || {};
-    this.sampleRate = config.sample_rate || 1.0;
-    this.hallucinationDetection = config.hallucination_detection || false;
-    this.inconsistencyDetection = config.inconsistency_detection || false;
-    this.hallucinationDetectionSampleRate = config.hallucination_detection_sample_rate || 0.0;
+    this.sampleRate = config.sampleRate || 1.0;
+    this.hallucinationDetection = config.hallucinationDetection || false;
+    this.inconsistencyDetection = config.inconsistencyDetection || false;
+    this.hallucinationDetectionSampleRate = config.hallucinationDetectionSampleRate || 0.0;
     this.configured = true;
 
     if (this.sampleRate < 0 || this.sampleRate > 1) {
-      logError(new Error('sample_rate must be between 0.0 and 1.0'));
+      logError(new Error('sampleRate must be between 0.0 and 1.0'));
       return this;
     }
 
@@ -46,19 +47,19 @@ export class QuotientLogger {
   // Type guard function to check if an object is a valid LogDocument
   private isValidLogDocument(obj: any): { valid: boolean; error?: string } {
     try {
-      // Check if it has the required page_content property
-      if (!('page_content' in obj)) {
+      // Check if it has the required pageContent property
+      if (!('pageContent' in obj)) {
         return { 
           valid: false, 
-          error: "Missing required 'page_content' property" 
+          error: "Missing required 'pageContent' property" 
         };
       }
       
-      // Check if page_content is a string
-      if (typeof obj.page_content !== 'string') {
+      // Check if pageContent is a string
+      if (typeof obj.pageContent !== 'string') {
         return { 
           valid: false, 
-          error: `The 'page_content' property must be a string, found ${typeof obj.page_content}` 
+          error: `The 'pageContent' property must be a string, found ${typeof obj.pageContent}` 
         };
       }
       
@@ -91,15 +92,15 @@ export class QuotientLogger {
         if (!validation.valid) {
           logError(new ValidationError(
             `Invalid document format at index ${i}: ${validation.error}. ` +
-            "Documents must be either strings or JSON objects with a 'page_content' string property and an optional 'metadata' object. " +
-            "To fix this, ensure each document follows the format: { page_content: 'your text content', metadata?: { key: 'value' } }"
+            "Documents must be either strings or JSON objects with a 'pageContent' string property and an optional 'metadata' object. " +
+            "To fix this, ensure each document follows the format: { pageContent: 'your text content', metadata?: { key: 'value' } }"
           ));
           return false;
         }
       } else {
         logError(new ValidationError(
-          `Invalid document type at index ${i}. Found ${typeof doc}, but documents must be either strings or JSON objects with a 'page_content' property. ` +
-          "To fix this, provide documents as either simple strings or properly formatted objects: { page_content: 'your text content' }"
+          `Invalid document type at index ${i}. Found ${typeof doc}, but documents must be either strings or JSON objects with a 'pageContent' property. ` +
+          "To fix this, provide documents as either simple strings or properly formatted objects: { pageContent: 'your text content' }"
         ));
         return false;
       }
@@ -108,15 +109,14 @@ export class QuotientLogger {
   }
 
   // log a message
-  // params: Omit<LogEntry, 'app_name' | 'environment'>
-  async log(params: Omit<LogEntry, 'app_name' | 'environment'>): Promise<any> {
+  async log(params: Omit<LogEntry, 'appName' | 'environment'>): Promise<any> {
     if (!this.configured) {
       logError(new Error('Logger is not configured. Please call init() before logging.'));
       return null;
     }
 
     if (!this.appName || !this.environment) {
-      logError(new Error('Logger is not properly configured. app_name and environment must be set.'));
+      logError(new Error('Logger is not properly configured. appName and environment must be set.'));
       return null;
     }
 
@@ -132,21 +132,82 @@ export class QuotientLogger {
     const mergedTags = { ...this.tags, ...(params.tags || {}) };
 
     // Use instance variables as defaults if not provided
-    const hallucinationDetection = params.hallucination_detection ?? this.hallucinationDetection;
-    const inconsistencyDetection = params.inconsistency_detection ?? this.inconsistencyDetection;
+    const hallucinationDetection = params.hallucinationDetection ?? this.hallucinationDetection;
+    const inconsistencyDetection = params.inconsistencyDetection ?? this.inconsistencyDetection;
 
     if (this.shouldSample()) {
-      const response = await this.logsResource.create({
+      // generate a random id
+      const id = uuidv4();
+      // generate iso string for createdAt
+      const createdAt = new Date().toISOString();
+      await this.logsResource.create({
         ...params,
-        app_name: this.appName,
+        id: id,
+        createdAt: createdAt,
+        appName: this.appName,
         environment: this.environment,
         tags: mergedTags,
-        hallucination_detection: hallucinationDetection,
-        inconsistency_detection: inconsistencyDetection,
-        hallucination_detection_sample_rate: this.hallucinationDetectionSampleRate,
+        hallucinationDetection: hallucinationDetection,
+        inconsistencyDetection: inconsistencyDetection,
+        hallucinationDetectionSampleRate: this.hallucinationDetectionSampleRate,
       });
 
-      return response;
+      return id;
     }
+  }
+
+  // poll for the detection results using log id
+  async pollForDetectionResults(
+    logId: string, 
+    timeout: number = 300, 
+    pollInterval: number = 2.0
+  ): Promise<DetectionResults | null> {
+    if (!this.configured) {
+      logError(new Error('Logger is not configured. Please call init() before polling for detection results.'));
+      return null;
+    }
+
+    if (!logId) {
+      logError(new Error('Log ID is required for detection polling.'));
+      return null;
+    }
+
+    const startTime = Date.now();
+    const timeoutMs = timeout * 1000; // Convert timeout to milliseconds
+    let currentPollInterval = pollInterval * 1000; // Convert poll interval to milliseconds
+    const baseInterval = pollInterval * 1000; // Keep track of the base interval
+
+    while ((Date.now() - startTime) < timeoutMs) {
+      try {
+        const results = await this.logsResource.getDetections(logId);
+        
+        // Reset interval on successful response
+        currentPollInterval = baseInterval;
+        
+        if (results && results.log) {
+          const status = results.log.status;
+          
+          // Check if we're in a final state
+          if (status === LOG_STATUS.LOG_CREATED_NO_DETECTIONS_PENDING || 
+              status === LOG_STATUS.LOG_CREATED_AND_DETECTION_COMPLETED) {
+            return results;
+          }
+          
+        }
+        
+        // Wait for poll interval before trying again
+        await new Promise(resolve => setTimeout(resolve, currentPollInterval));
+      } catch (error) {
+        // Handle event loop errors specifically
+        if (error instanceof Error && error.message.includes('Event loop is closed')) {
+          await new Promise(resolve => setTimeout(resolve, currentPollInterval));
+          continue;
+        }
+        await new Promise(resolve => setTimeout(resolve, currentPollInterval));
+      }
+    }
+    
+    logError(new Error(`Timed out waiting for detection results after ${timeout} seconds`));
+    return null;
   }
 } 

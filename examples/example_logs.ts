@@ -5,30 +5,31 @@ async function main() {
     console.log("QuotientAI client initialized")
 
     // configure the logger
-    const quotient_logger = quotient.logger.init({
-        app_name: "my-app",
+    const quotientLogger = quotient.logger.init({
+        appName: "my-app-test",
         environment: "dev",
-        sample_rate: 1.0,
+        sampleRate: 1.0,
         tags: { model: "gpt-4o", feature: "customer-support" },
-        hallucination_detection: true,
+        hallucinationDetection: true,
+        hallucinationDetectionSampleRate: 1.0,
     })
 
     console.log("Logger initialized")
 
     // mock retrieved documents
-    const retrieved_documents = [
+    const retrievedDocuments = [
         "Sample document 1",
-        {"page_content": "Sample document 2", "metadata": {"source": "website.com"}},
-        {"page_content": "Sample document 3"}
+        {"pageContent": "Sample document 2", "metadata": {"source": "website.com"}},
+        {"pageContent": "Sample document 3"}
     ]
 
     console.log("Preparing to log with quotient_logger")
     try {
-        const response = await quotient_logger.log({
-            user_query: "How do I cook a goose?",
-            model_output: "The capital of France is Paris",
-            documents: retrieved_documents,
-            message_history: [
+        const logId= await quotientLogger.log({
+            userQuery: "How do I cook a test?",
+            modelOutput: "The capital of France is Paris",
+            documents: retrievedDocuments,
+            messageHistory: [
                 {"role": "system", "content": "You are an expert on geography."},
                 {"role": "user", "content": "What is the capital of France?"},
                 {"role": "assistant", "content": "The capital of France is Paris"},
@@ -37,10 +38,17 @@ async function main() {
                 "You are a helpful assistant that answers questions about the world.",
                 "Answer the question in a concise manner. If you are not sure, say 'I don't know'.",
             ],
-            hallucination_detection: true,
-            inconsistency_detection: true,
+            hallucinationDetection: true,
+            inconsistencyDetection: true,
         });
-        console.log(response.message)
+        console.log('pollForDetectionResults with logId: ', logId)
+
+        // poll for the detection results
+        const detectionResults = await quotientLogger.pollForDetectionResults(logId);
+        console.log('documentEvaluations', detectionResults?.evaluations[0].documentEvaluations)
+        console.log('messageHistoryEvaluations', detectionResults?.evaluations[0].messageHistoryEvaluations)
+        console.log('instructionEvaluations', detectionResults?.evaluations[0].instructionEvaluations)
+        console.log('fullDocContextEvaluation', detectionResults?.evaluations[0].fullDocContextEvaluation)
     } catch (error) {
         console.error(error)
     }

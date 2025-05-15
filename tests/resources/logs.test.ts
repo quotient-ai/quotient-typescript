@@ -12,7 +12,7 @@ describe('LogsResource', () => {
             inconsistency_detection: false,
             user_query: 'What is the capital of France?',
             model_output: 'Paris is the capital of France.',
-            documents: ['doc1', 'doc2', { page_content: 'doc3', metadata: { source: 'test' } }],
+            documents: ['doc1', 'doc2', { pageContent: 'doc3', metadata: { source: 'test' } }],
             message_history: [
                 { role: 'user', content: 'What is the capital of France?' },
                 { role: 'assistant', content: 'Paris is the capital of France.' }
@@ -40,7 +40,7 @@ describe('LogsResource', () => {
     describe('Log class', () => {
         it('should format log as string', () => {
             const log = new Log(mockLogs[0]);
-            const expectedString = `Log(id="log-1", app_name="test-app", environment="development", created_at="2024-03-20T10:00:00.000Z")`;
+            const expectedString = `Log(id="log-1", appName="test-app", environment="development", createdAt="2024-03-20T10:00:00.000Z")`;
             expect(log.toString()).toBe(expectedString);
         });
     });
@@ -57,9 +57,9 @@ describe('LogsResource', () => {
         expect(logs).toHaveLength(2);
         expect(logs[0]).toBeInstanceOf(Log);
         expect(logs[0].id).toBe('log-1');
-        expect(logs[0].app_name).toBe('test-app');
+        expect(logs[0].appName).toBe('test-app');
         expect(logs[0].environment).toBe('development');
-        expect(logs[0].created_at).toBeInstanceOf(Date);
+        expect(logs[0].createdAt).toBeInstanceOf(Date);
         expect(client.get).toHaveBeenCalledWith('/logs', {});
     });
 
@@ -74,10 +74,10 @@ describe('LogsResource', () => {
         const endDate = new Date('2024-03-20T23:59:59Z');
         
         const logs = await logsResource.list({
-            app_name: 'test-app',
+            appName: 'test-app',
             environment: 'development',
-            start_date: startDate,
-            end_date: endDate,
+            startDate: startDate,
+            endDate: endDate,
             limit: 10,
             offset: 0
         });
@@ -157,20 +157,20 @@ describe('LogsResource', () => {
 
         const logsResource = new LogsResource(client);
         await logsResource.create({
-            app_name: 'test-app',
+            appName: 'test-app',
             environment: 'development',
-            hallucination_detection: true,
-            inconsistency_detection: false,
-            user_query: 'What is the capital of France?',
-            model_output: 'Paris is the capital of France.',
+            hallucinationDetection: true,
+            inconsistencyDetection: false,
+            userQuery: 'What is the capital of France?',
+            modelOutput: 'Paris is the capital of France.',
             documents: ['doc1', 'doc2'],
-            message_history: [
+            messageHistory: [
                 { role: 'user', content: 'What is the capital of France?' },
                 { role: 'assistant', content: 'Paris is the capital of France.' }
             ],
             instructions: ['Be concise', 'Be accurate'],
             tags: { user_id: '123' },
-            hallucination_detection_sample_rate: 0.5
+            hallucinationDetectionSampleRate: 0.5
         });
 
         expect(client.post).toHaveBeenCalledWith('/logs', {
@@ -198,20 +198,20 @@ describe('LogsResource', () => {
 
         const logsResource = new LogsResource(client);
         const result = await logsResource.create({
-            app_name: 'test-app',
+            appName: 'test-app',
             environment: 'development',
-            hallucination_detection: true,
-            inconsistency_detection: false,
-            user_query: 'What is the capital of France?',
-            model_output: 'Paris is the capital of France.',
+            hallucinationDetection: true,
+            inconsistencyDetection: false,
+            userQuery: 'What is the capital of France?',
+            modelOutput: 'Paris is the capital of France.',
             documents: ['doc1', 'doc2'],
-            message_history: [
+            messageHistory: [
                 { role: 'user', content: 'What is the capital of France?' },
                 { role: 'assistant', content: 'Paris is the capital of France.' }
             ],
             instructions: ['Be concise', 'Be accurate'],    
             tags: { user_id: '123' },
-            hallucination_detection_sample_rate: 0.5
+            hallucinationDetectionSampleRate: 0.5
         });
 
         expect(result).toBeNull();
