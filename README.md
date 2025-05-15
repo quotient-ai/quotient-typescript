@@ -14,9 +14,9 @@ npm install quotientai
 
 ## Usage
 
-Create an API key on Quotient and set it as an environment variable called `QUOTIENT_API_KEY`. Check out the examples in the `examples/` directory or see our [docs](https://docs.quotientai.co) for a more comprehensive walkthrough.
+Create an API key on [Quotient](https://app.quotientai.co/dashboard) and set it as an environment variable called `QUOTIENT_API_KEY`.
 
-Send your first log and detect hallucinations. Run the code below:
+Send your first log and detect hallucinations. Run the code below and see your Logs and Detections on your [Quotient Dashboard](https://app.quotientai.co/dashboard).
 
 ```typescript
 import { QuotientAI } from 'quotientai';
@@ -42,3 +42,7 @@ const logId = await quotientLogger.log({
 // optionally, you can poll for detection results for further actions
 const detectionResults = await quotientLogger.pollForDetections(logId);
 ```
+
+## Docs
+
+For comprehensive documentation, please visit our [docs](https://docs.quotientai.co).
