@@ -1,57 +1,63 @@
 import { QuotientAI } from '../quotientai';
 
 async function main() {
-    const quotient = new QuotientAI();
-    console.log("QuotientAI client initialized")
+  const quotient = new QuotientAI();
+  console.log('QuotientAI client initialized');
 
-    // configure the logger
-    const quotientLogger = quotient.logger.init({
-        appName: "my-app-test",
-        environment: "dev",
-        sampleRate: 1.0,
-        tags: { model: "gpt-4o", feature: "customer-support" },
-        hallucinationDetection: true,
-        hallucinationDetectionSampleRate: 1.0,
-    })
+  // configure the logger
+  const quotientLogger = quotient.logger.init({
+    appName: 'my-app-test',
+    environment: 'dev',
+    sampleRate: 1.0,
+    tags: { model: 'gpt-4o', feature: 'customer-support' },
+    hallucinationDetection: true,
+    hallucinationDetectionSampleRate: 1.0,
+  });
 
-    console.log("Logger initialized")
+  console.log('Logger initialized');
 
-    // mock retrieved documents
-    const retrievedDocuments = [
-        "Sample document 1",
-        {"pageContent": "Sample document 2", "metadata": {"source": "website.com"}},
-        {"pageContent": "Sample document 3"}
-    ]
+  // mock retrieved documents
+  const retrievedDocuments = [
+    'Sample document 1',
+    { pageContent: 'Sample document 2', metadata: { source: 'website.com' } },
+    { pageContent: 'Sample document 3' },
+  ];
 
-    console.log("Preparing to log with quotient_logger")
-    try {
-        const logId= await quotientLogger.log({
-            userQuery: "How do I cook a test?",
-            modelOutput: "The capital of France is Paris",
-            documents: retrievedDocuments,
-            messageHistory: [
-                {"role": "system", "content": "You are an expert on geography."},
-                {"role": "user", "content": "What is the capital of France?"},
-                {"role": "assistant", "content": "The capital of France is Paris"},
-            ],
-            instructions: [
-                "You are a helpful assistant that answers questions about the world.",
-                "Answer the question in a concise manner. If you are not sure, say 'I don't know'.",
-            ],
-            hallucinationDetection: true,
-            inconsistencyDetection: true,
-        });
-        console.log('pollForDetectionResults with logId: ', logId)
+  console.log('Preparing to log with quotient_logger');
+  try {
+    const logId = await quotientLogger.log({
+      userQuery: 'How do I cook a test?',
+      modelOutput: 'The capital of France is Paris',
+      documents: retrievedDocuments,
+      messageHistory: [
+        { role: 'system', content: 'You are an expert on geography.' },
+        { role: 'user', content: 'What is the capital of France?' },
+        { role: 'assistant', content: 'The capital of France is Paris' },
+      ],
+      instructions: [
+        'You are a helpful assistant that answers questions about the world.',
+        "Answer the question in a concise manner. If you are not sure, say 'I don't know'.",
+      ],
+      hallucinationDetection: true,
+      inconsistencyDetection: true,
+    });
+    console.log('pollForDetectionResults with logId: ', logId);
 
-        // poll for the detection results
-        const detectionResults = await quotientLogger.pollForDetectionResults(logId);
-        console.log('documentEvaluations', detectionResults?.evaluations[0].documentEvaluations)
-        console.log('messageHistoryEvaluations', detectionResults?.evaluations[0].messageHistoryEvaluations)
-        console.log('instructionEvaluations', detectionResults?.evaluations[0].instructionEvaluations)
-        console.log('fullDocContextEvaluation', detectionResults?.evaluations[0].fullDocContextEvaluation)
-    } catch (error) {
-        console.error(error)
-    }
+    // poll for the detection results
+    const detectionResults = await quotientLogger.pollForDetectionResults(logId);
+    console.log('documentEvaluations', detectionResults?.evaluations[0].documentEvaluations);
+    console.log(
+      'messageHistoryEvaluations',
+      detectionResults?.evaluations[0].messageHistoryEvaluations
+    );
+    console.log('instructionEvaluations', detectionResults?.evaluations[0].instructionEvaluations);
+    console.log(
+      'fullDocContextEvaluation',
+      detectionResults?.evaluations[0].fullDocContextEvaluation
+    );
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 main().catch(console.error);

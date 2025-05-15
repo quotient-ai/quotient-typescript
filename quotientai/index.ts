@@ -4,7 +4,7 @@ import { AuthResource } from './resources/auth';
 import { LogsResource } from './resources/logs';
 import { logError } from './exceptions';
 
-export class QuotientAI  {
+export class QuotientAI {
   public auth: AuthResource = null!;
   public logs: LogsResource = null!;
   public logger: QuotientLogger = null!;
@@ -14,8 +14,8 @@ export class QuotientAI  {
     if (!key) {
       const error = new Error(
         'Could not find API key. Either pass apiKey to QuotientAI() or ' +
-        'set the QUOTIENT_API_KEY environment variable. ' +
-        'If you do not have an API key, you can create one at https://app.quotientai.co in your settings page'
+          'set the QUOTIENT_API_KEY environment variable. ' +
+          'If you do not have an API key, you can create one at https://app.quotientai.co in your settings page'
       );
       logError(error, 'QuotientAI.constructor');
       return;
@@ -25,7 +25,7 @@ export class QuotientAI  {
     }
   }
 
-  private initializeResources(client: BaseQuotientClient): void {  
+  private initializeResources(client: BaseQuotientClient): void {
     // Initialize resources
     this.auth = new AuthResource(client);
     this.logs = new LogsResource(client);
@@ -40,9 +40,9 @@ export class QuotientAI  {
       logError(
         error as Error,
         'If you are seeing this error, please check that your API key is correct.\n' +
-        'If the issue persists, please contact support@quotientai.co'
+          'If the issue persists, please contact support@quotientai.co'
       );
       return;
     }
   }
-} 
+}

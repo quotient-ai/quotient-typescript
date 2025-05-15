@@ -49,31 +49,31 @@ export class QuotientLogger {
     try {
       // Check if it has the required pageContent property
       if (!('pageContent' in obj)) {
-        return { 
-          valid: false, 
-          error: "Missing required 'pageContent' property" 
+        return {
+          valid: false,
+          error: "Missing required 'pageContent' property",
         };
       }
-      
+
       // Check if pageContent is a string
       if (typeof obj.pageContent !== 'string') {
-        return { 
-          valid: false, 
-          error: `The 'pageContent' property must be a string, found ${typeof obj.pageContent}` 
+        return {
+          valid: false,
+          error: `The 'pageContent' property must be a string, found ${typeof obj.pageContent}`,
         };
       }
-      
+
       // If metadata exists, check if it's an object
       if ('metadata' in obj && obj.metadata !== null && typeof obj.metadata !== 'object') {
-        return { 
-          valid: false, 
-          error: `The 'metadata' property must be an object, found ${typeof obj.metadata}` 
+        return {
+          valid: false,
+          error: `The 'metadata' property must be an object, found ${typeof obj.metadata}`,
         };
       }
-      
+
       return { valid: true };
     } catch (error) {
-      return { valid: false, error: "Unexpected error validating document" };
+      return { valid: false, error: 'Unexpected error validating document' };
     }
   }
 
@@ -90,18 +90,22 @@ export class QuotientLogger {
       } else if (typeof doc === 'object' && doc !== null) {
         const validation = this.isValidLogDocument(doc);
         if (!validation.valid) {
-          logError(new ValidationError(
-            `Invalid document format at index ${i}: ${validation.error}. ` +
-            "Documents must be either strings or JSON objects with a 'pageContent' string property and an optional 'metadata' object. " +
-            "To fix this, ensure each document follows the format: { pageContent: 'your text content', metadata?: { key: 'value' } }"
-          ));
+          logError(
+            new ValidationError(
+              `Invalid document format at index ${i}: ${validation.error}. ` +
+                "Documents must be either strings or JSON objects with a 'pageContent' string property and an optional 'metadata' object. " +
+                "To fix this, ensure each document follows the format: { pageContent: 'your text content', metadata?: { key: 'value' } }"
+            )
+          );
           return false;
         }
       } else {
-        logError(new ValidationError(
-          `Invalid document type at index ${i}. Found ${typeof doc}, but documents must be either strings or JSON objects with a 'pageContent' property. ` +
-          "To fix this, provide documents as either simple strings or properly formatted objects: { pageContent: 'your text content' }"
-        ));
+        logError(
+          new ValidationError(
+            `Invalid document type at index ${i}. Found ${typeof doc}, but documents must be either strings or JSON objects with a 'pageContent' property. ` +
+              "To fix this, provide documents as either simple strings or properly formatted objects: { pageContent: 'your text content' }"
+          )
+        );
         return false;
       }
     }
@@ -116,7 +120,9 @@ export class QuotientLogger {
     }
 
     if (!this.appName || !this.environment) {
-      logError(new Error('Logger is not properly configured. appName and environment must be set.'));
+      logError(
+        new Error('Logger is not properly configured. appName and environment must be set.')
+      );
       return null;
     }
 
@@ -158,12 +164,16 @@ export class QuotientLogger {
 
   // poll for the detection results using log id
   async pollForDetectionResults(
-    logId: string, 
-    timeout: number = 300, 
+    logId: string,
+    timeout: number = 300,
     pollInterval: number = 2.0
   ): Promise<DetectionResults | null> {
     if (!this.configured) {
-      logError(new Error('Logger is not configured. Please call init() before polling for detection results.'));
+      logError(
+        new Error(
+          'Logger is not configured. Please call init() before polling for detection results.'
+        )
+      );
       return null;
     }
 
@@ -177,37 +187,38 @@ export class QuotientLogger {
     let currentPollInterval = pollInterval * 1000; // Convert poll interval to milliseconds
     const baseInterval = pollInterval * 1000; // Keep track of the base interval
 
-    while ((Date.now() - startTime) < timeoutMs) {
+    while (Date.now() - startTime < timeoutMs) {
       try {
         const results = await this.logsResource.getDetections(logId);
-        
+
         // Reset interval on successful response
         currentPollInterval = baseInterval;
-        
+
         if (results && results.log) {
           const status = results.log.status;
-          
+
           // Check if we're in a final state
-          if (status === LOG_STATUS.LOG_CREATED_NO_DETECTIONS_PENDING || 
-              status === LOG_STATUS.LOG_CREATED_AND_DETECTION_COMPLETED) {
+          if (
+            status === LOG_STATUS.LOG_CREATED_NO_DETECTIONS_PENDING ||
+            status === LOG_STATUS.LOG_CREATED_AND_DETECTION_COMPLETED
+          ) {
             return results;
           }
-          
         }
-        
+
         // Wait for poll interval before trying again
-        await new Promise(resolve => setTimeout(resolve, currentPollInterval));
+        await new Promise((resolve) => setTimeout(resolve, currentPollInterval));
       } catch (error) {
         // Handle event loop errors specifically
         if (error instanceof Error && error.message.includes('Event loop is closed')) {
-          await new Promise(resolve => setTimeout(resolve, currentPollInterval));
+          await new Promise((resolve) => setTimeout(resolve, currentPollInterval));
           continue;
         }
-        await new Promise(resolve => setTimeout(resolve, currentPollInterval));
+        await new Promise((resolve) => setTimeout(resolve, currentPollInterval));
       }
     }
-    
+
     logError(new Error(`Timed out waiting for detection results after ${timeout} seconds`));
     return null;
   }
-} 
+}

@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     coverage: {
       include: ['quotientai/**/*.ts'],
-      exclude: ['tests/**/*.ts', 'examples/**/*.ts']
-    }
-  }
-}); 
+      exclude: ['tests/**/*.ts', 'examples/**/*.ts'],
+    },
+  },
+});

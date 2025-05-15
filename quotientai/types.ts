@@ -28,9 +28,9 @@ export interface LogEntry {
   userQuery: string;
   modelOutput: string;
   documents: (string | LogDocument)[];
-  messageHistory?: Array<Record<string, any>> | null; 
+  messageHistory?: Array<Record<string, any>> | null;
   instructions?: string[] | null;
-  tags?: Record<string, any>; 
+  tags?: Record<string, any>;
   hallucinationDetection: boolean;
   hallucinationDetectionSampleRate?: number;
   inconsistencyDetection: boolean;
@@ -41,7 +41,7 @@ export interface LoggerConfig {
   createdAt?: string | Date;
   appName: string;
   environment: string;
-  tags?: Record<string, any>; 
+  tags?: Record<string, any>;
   sampleRate?: number;
   hallucinationDetection?: boolean;
   inconsistencyDetection?: boolean;
@@ -49,23 +49,23 @@ export interface LoggerConfig {
 }
 
 export enum LOG_STATUS {
-  LOG_NOT_FOUND = "log_not_found",
-  LOG_CREATION_IN_PROGRESS = "log_creation_in_progress",
-  LOG_CREATED_NO_DETECTIONS_PENDING = "log_created_no_detections_pending",
-  LOG_CREATED_AND_DETECTION_IN_PROGRESS = "log_created_and_detection_in_progress",
-  LOG_CREATED_AND_DETECTION_COMPLETED = "log_created_and_detection_completed",
+  LOG_NOT_FOUND = 'log_not_found',
+  LOG_CREATION_IN_PROGRESS = 'log_creation_in_progress',
+  LOG_CREATED_NO_DETECTIONS_PENDING = 'log_created_no_detections_pending',
+  LOG_CREATED_AND_DETECTION_IN_PROGRESS = 'log_created_and_detection_in_progress',
+  LOG_CREATED_AND_DETECTION_COMPLETED = 'log_created_and_detection_completed',
 }
 
 export enum EVALUATION_SCORE {
-  PASS = "PASS",
-  FAIL = "FAIL",
-  INCONCLUSIVE = "INCONCLUSIVE",
+  PASS = 'PASS',
+  FAIL = 'FAIL',
+  INCONCLUSIVE = 'INCONCLUSIVE',
 }
 
 export interface QuotientAIError extends Error {
   status?: number;
   code?: string;
-} 
+}
 
 // Common evaluation properties - API Response format (snake_case)
 export interface BaseEvaluationResponse {

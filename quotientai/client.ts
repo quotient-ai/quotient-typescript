@@ -16,7 +16,7 @@ export class BaseQuotientClient {
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;
-    
+
     // Determine token directory
     let tokenDir: string;
     try {
@@ -37,8 +37,8 @@ export class BaseQuotientClient {
     this.client = axios.create({
       baseURL: 'https://api.quotientai.co/api/v1',
       headers: {
-        Authorization: `Bearer ${apiKey}`
-      }
+        Authorization: `Bearer ${apiKey}`,
+      },
     });
 
     // Load existing token
@@ -80,7 +80,11 @@ export class BaseQuotientClient {
         JSON.stringify({ token, expires_at: expiry, api_key: this.apiKey })
       );
     } catch (error) {
-      logError(new QuotientAIError('Could not create directory for token. If you see this error please notify us at contact@quotientai.co'));
+      logError(
+        new QuotientAIError(
+          'Could not create directory for token. If you see this error please notify us at contact@quotientai.co'
+        )
+      );
     }
   }
 
@@ -96,7 +100,7 @@ export class BaseQuotientClient {
     }
 
     // With 5-minute buffer
-    return Date.now() / 1000 < (this.tokenExpiry - 300);
+    return Date.now() / 1000 < this.tokenExpiry - 300;
   }
 
   private updateAuthHeader(): void {
@@ -137,10 +141,8 @@ export class BaseQuotientClient {
 
     // Filter out null values
     const filteredData = Array.isArray(data)
-      ? data.filter(v => v !== null)
-      : Object.fromEntries(
-          Object.entries(data).filter(([_, v]) => v !== null)
-        );
+      ? data.filter((v) => v !== null)
+      : Object.fromEntries(Object.entries(data).filter(([_, v]) => v !== null));
 
     const response = await this.client.post(path, filteredData, { timeout });
     return response.data;
@@ -149,9 +151,7 @@ export class BaseQuotientClient {
   public async patch<T>(path: string, data: any = {}, timeout?: number): Promise<T> {
     this.updateAuthHeader();
 
-    const filteredData = Object.fromEntries(
-      Object.entries(data).filter(([_, v]) => v !== null)
-    );
+    const filteredData = Object.fromEntries(Object.entries(data).filter(([_, v]) => v !== null));
 
     const response = await this.client.patch(path, filteredData, { timeout });
     return response.data;
@@ -162,4 +162,4 @@ export class BaseQuotientClient {
     const response = await this.client.delete(path, { timeout });
     return response.data;
   }
-} 
+}
