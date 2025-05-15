@@ -1,4 +1,4 @@
-import { QuotientAI } from '../quotientai';
+import { QuotientAI } from 'quotientai';
 
 async function main() {
   const quotient = new QuotientAI();
@@ -6,7 +6,7 @@ async function main() {
 
   // configure the logger
   const quotientLogger = quotient.logger.init({
-    appName: 'my-app-test',
+    appName: 'my-app',
     environment: 'dev',
     sampleRate: 1.0,
     tags: { model: 'gpt-4o', feature: 'customer-support' },
@@ -41,20 +41,11 @@ async function main() {
       hallucinationDetection: true,
       inconsistencyDetection: true,
     });
-    console.log('pollForDetectionResults with logId: ', logId);
+    console.log('pollForDetections with logId: ', logId);
 
     // poll for the detection results
-    const detectionResults = await quotientLogger.pollForDetectionResults(logId);
-    console.log('documentEvaluations', detectionResults?.evaluations[0].documentEvaluations);
-    console.log(
-      'messageHistoryEvaluations',
-      detectionResults?.evaluations[0].messageHistoryEvaluations
-    );
-    console.log('instructionEvaluations', detectionResults?.evaluations[0].instructionEvaluations);
-    console.log(
-      'fullDocContextEvaluation',
-      detectionResults?.evaluations[0].fullDocContextEvaluation
-    );
+    const detectionResults = await quotientLogger.pollForDetections(logId);
+    console.log('detectionResults', detectionResults);
   } catch (error) {
     console.error(error);
   }
