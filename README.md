@@ -29,7 +29,7 @@ const quotientLogger = quotient.logger.init({
   environment: 'dev',
   sampleRate: 1.0,
   hallucinationDetection: true,
-  hallucination_detection_sample_rate: 1.0,
+  hallucinationDetectionSampleRate: 1.0,
 });
 
 // create a log
