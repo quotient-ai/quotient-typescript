@@ -14,4 +14,3 @@ export class AuthResource {
     return response;
   }
 }
-
