@@ -4,7 +4,7 @@
 
 ## Overview
 
-`quotientai` is an SDK built to manage logs and detect hallucinations and inconsistencies in AI responses with [Quotient](https://quotientai.co).
+`quotientai` is an SDK and CLI for logging data to [Quotient](https://quotientai.co), and running hallucination and document attribution detections for retrieval and search-augmented AI systems.
 
 ## Installation
 
@@ -14,7 +14,7 @@ npm install quotientai
 
 ## Usage
 
-Create an API key on [Quotient](https://app.quotientai.co/dashboard) and set it as an environment variable called `QUOTIENT_API_KEY`.
+Create an API key on [Quotient](https://app.quotientai.co) and set it as an environment variable called `QUOTIENT_API_KEY`. Then follow the examples below or see our [docs](https://docs.quotientai.co) for a more comprehensive walkthrough.
 
 Send your first log and detect hallucinations. Run the code below and see your Logs and Detections on your [Quotient Dashboard](https://app.quotientai.co/dashboard).
 
@@ -25,17 +25,17 @@ const quotient = new QuotientAI(apiKey?: string);
 
 // initialize the logger
 const quotientLogger = quotient.logger.init({
-  app_name: 'my-app',
+  appName: 'my-app',
   environment: 'dev',
-  sample_rate: 1.0,
-  hallucination_detection: true,
+  sampleRate: 1.0,
+  hallucinationDetection: true,
   hallucination_detection_sample_rate: 1.0,
 });
 
 // create a log
 const logId = await quotientLogger.log({
-  user_query: 'How do I cook a goose?',
-  model_output: 'The capital of France is Paris',
+  userQuery: 'How do I cook a goose?',
+  modelOutput: 'The capital of France is Paris',
   documents: ['Here is an excellent goose recipe...'],
 });
 
