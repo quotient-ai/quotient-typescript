@@ -12,7 +12,7 @@ describe('LogsResource', () => {
       inconsistency_detection: false,
       user_query: 'What is the capital of France?',
       model_output: 'Paris is the capital of France.',
-      documents: ['doc1', 'doc2', { pageContent: 'doc3', metadata: { source: 'test' } }],
+      documents: ['doc1', 'doc2', { page_content: 'doc3', metadata: { source: 'test' } }],
       message_history: [
         { role: 'user', content: 'What is the capital of France?' },
         { role: 'assistant', content: 'Paris is the capital of France.' },
