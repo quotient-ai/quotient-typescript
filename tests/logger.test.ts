@@ -13,7 +13,7 @@ describe('QuotientLogger', () => {
   });
 
   it('should initialize without being configured', () => {
-    const mockLogsResource = { create: vi.fn(), list: vi.fn() };
+    const mockLogsResource = { create: vi.fn(), list: vi.fn(), getDetections: vi.fn() };
     const logger = new QuotientLogger(mockLogsResource);
     const privateLogger = logger as any;
     expect(logger).toBeDefined();
@@ -26,7 +26,7 @@ describe('QuotientLogger', () => {
   });
 
   it('should use default values when not provided', () => {
-    const mockLogsResource = { create: vi.fn(), list: vi.fn() };
+    const mockLogsResource = { create: vi.fn(), list: vi.fn(), getDetections: vi.fn() };
     const logger = new QuotientLogger(mockLogsResource);
     const privateLogger = logger as any;
 
@@ -45,7 +45,7 @@ describe('QuotientLogger', () => {
   });
 
   it('should initialize with the correct properties', () => {
-    const mockLogsResource = { create: vi.fn(), list: vi.fn() };
+    const mockLogsResource = { create: vi.fn(), list: vi.fn(), getDetections: vi.fn() };
     const logger = new QuotientLogger(mockLogsResource);
     const privateLogger = logger as any;
 
@@ -69,7 +69,7 @@ describe('QuotientLogger', () => {
   });
 
   it('should log error and return this if sample rate is not between 0 and 1', () => {
-    const mockLogsResource = { create: vi.fn(), list: vi.fn() };
+    const mockLogsResource = { create: vi.fn(), list: vi.fn(), getDetections: vi.fn() };
     const logger = new QuotientLogger(mockLogsResource);
     const privateLogger = logger as any;
     const result = privateLogger.init({ sampleRate: 1.5 });
@@ -80,7 +80,7 @@ describe('QuotientLogger', () => {
   });
 
   it('should log error and return null if you attempt to log before initializing', async () => {
-    const mockLogsResource = { create: vi.fn(), list: vi.fn() };
+    const mockLogsResource = { create: vi.fn(), list: vi.fn(), getDetections: vi.fn() };
     const logger = new QuotientLogger(mockLogsResource);
     const privateLogger = logger as any;
     const result = await privateLogger.log({ message: 'test' });
@@ -92,7 +92,7 @@ describe('QuotientLogger', () => {
   });
 
   it('should log a message if initialized', async () => {
-    const mockLogsResource = { create: vi.fn(), list: vi.fn() };
+    const mockLogsResource = { create: vi.fn(), list: vi.fn(), getDetections: vi.fn() };
     const logger = new QuotientLogger(mockLogsResource);
     const privateLogger = logger as any;
     privateLogger.init({
@@ -102,19 +102,21 @@ describe('QuotientLogger', () => {
       sampleRate: 1.0,
     });
     await privateLogger.log({ message: 'test' });
-    expect(mockLogsResource.create).toHaveBeenCalledWith({
-      appName: 'test_app',
-      environment: 'test_environment',
-      tags: { test: 'test' },
-      message: 'test',
-      hallucinationDetection: false,
-      hallucinationDetectionSampleRate: 0,
-      inconsistencyDetection: false,
-    });
+    expect(mockLogsResource.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        appName: 'test_app',
+        environment: 'test_environment',
+        tags: { test: 'test' },
+        message: 'test',
+        hallucinationDetection: false,
+        hallucinationDetectionSampleRate: 0,
+        inconsistencyDetection: false,
+      })
+    );
   });
 
   it('should not log a message if shouldSample returns false', async () => {
-    const mockLogsResource = { create: vi.fn(), list: vi.fn() };
+    const mockLogsResource = { create: vi.fn(), list: vi.fn(), getDetections: vi.fn() };
     const logger = new QuotientLogger(mockLogsResource);
     const privateLogger = logger as any;
     // Mock shouldSample to always return false
@@ -131,7 +133,7 @@ describe('QuotientLogger', () => {
   });
 
   it('should verify shouldSample behavior based on Math.random', () => {
-    const mockLogsResource = { create: vi.fn(), list: vi.fn() };
+    const mockLogsResource = { create: vi.fn(), list: vi.fn(), getDetections: vi.fn() };
     const logger = new QuotientLogger(mockLogsResource);
     const privateLogger = logger as any;
     privateLogger.init({ sampleRate: 0.5 });
@@ -148,7 +150,7 @@ describe('QuotientLogger', () => {
   });
 
   it('should log error and return null if required appName or environment is missing after initialization', async () => {
-    const mockLogsResource = { create: vi.fn(), list: vi.fn() };
+    const mockLogsResource = { create: vi.fn(), list: vi.fn(), getDetections: vi.fn() };
     const logger = new QuotientLogger(mockLogsResource);
     const privateLogger = logger as any;
 
@@ -178,7 +180,7 @@ describe('QuotientLogger', () => {
 
   describe('Document Validation', () => {
     it('should accept string documents', async () => {
-      const mockLogsResource = { create: vi.fn(), list: vi.fn() };
+      const mockLogsResource = { create: vi.fn(), list: vi.fn(), getDetections: vi.fn() };
       const logger = new QuotientLogger(mockLogsResource);
       const privateLogger = logger as any;
 
@@ -194,7 +196,7 @@ describe('QuotientLogger', () => {
     });
 
     it('should accept valid LogDocument objects', async () => {
-      const mockLogsResource = { create: vi.fn(), list: vi.fn() };
+      const mockLogsResource = { create: vi.fn(), list: vi.fn(), getDetections: vi.fn() };
       const logger = new QuotientLogger(mockLogsResource);
       const privateLogger = logger as any;
 
@@ -213,7 +215,7 @@ describe('QuotientLogger', () => {
     });
 
     it('should log error and return null when document is missing pageContent', async () => {
-      const mockLogsResource = { create: vi.fn(), list: vi.fn() };
+      const mockLogsResource = { create: vi.fn(), list: vi.fn(), getDetections: vi.fn() };
       const logger = new QuotientLogger(mockLogsResource);
       const privateLogger = logger as any;
 
@@ -232,7 +234,7 @@ describe('QuotientLogger', () => {
     });
 
     it('should log error and return null when pageContent is not a string', async () => {
-      const mockLogsResource = { create: vi.fn(), list: vi.fn() };
+      const mockLogsResource = { create: vi.fn(), list: vi.fn(), getDetections: vi.fn() };
       const logger = new QuotientLogger(mockLogsResource);
       const privateLogger = logger as any;
 
@@ -251,7 +253,7 @@ describe('QuotientLogger', () => {
     });
 
     it('should log error and return null when metadata is not an object', async () => {
-      const mockLogsResource = { create: vi.fn(), list: vi.fn() };
+      const mockLogsResource = { create: vi.fn(), list: vi.fn(), getDetections: vi.fn() };
       const logger = new QuotientLogger(mockLogsResource);
       const privateLogger = logger as any;
 
@@ -270,7 +272,7 @@ describe('QuotientLogger', () => {
     });
 
     it('should accept null metadata', async () => {
-      const mockLogsResource = { create: vi.fn(), list: vi.fn() };
+      const mockLogsResource = { create: vi.fn(), list: vi.fn(), getDetections: vi.fn() };
       const logger = new QuotientLogger(mockLogsResource);
       const privateLogger = logger as any;
 
@@ -286,7 +288,7 @@ describe('QuotientLogger', () => {
     });
 
     it('should validate documents as part of the log method', async () => {
-      const mockLogsResource = { create: vi.fn(), list: vi.fn() };
+      const mockLogsResource = { create: vi.fn(), list: vi.fn(), getDetections: vi.fn() };
       const logger = new QuotientLogger(mockLogsResource);
       const privateLogger = logger as any;
 
@@ -306,7 +308,7 @@ describe('QuotientLogger', () => {
     });
 
     it('should skip validation if no documents are provided', async () => {
-      const mockLogsResource = { create: vi.fn(), list: vi.fn() };
+      const mockLogsResource = { create: vi.fn(), list: vi.fn(), getDetections: vi.fn() };
       const logger = new QuotientLogger(mockLogsResource);
       const privateLogger = logger as any;
 
@@ -324,7 +326,7 @@ describe('QuotientLogger', () => {
     });
 
     it('should directly test isValidLogDocument with various inputs', () => {
-      const mockLogsResource = { create: vi.fn(), list: vi.fn() };
+      const mockLogsResource = { create: vi.fn(), list: vi.fn(), getDetections: vi.fn() };
       const logger = new QuotientLogger(mockLogsResource);
       const privateLogger = logger as any;
 
