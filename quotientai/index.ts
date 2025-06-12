@@ -1,13 +1,15 @@
 import { BaseQuotientClient } from './client';
 import { QuotientLogger } from './logger';
 import { AuthResource } from './resources/auth';
-import { LogsResource } from './resources/logs';
-import { logError } from './exceptions';
+import { LogsResource, Log } from './resources/logs';
+import { TracingResource, QuotientAttributes, TracingConfig } from './tracing';
+import { ValidationError, QuotientAIError, logError } from './exceptions';
 
 export class QuotientAI {
   public auth: AuthResource = null!;
   public logs: LogsResource = null!;
   public logger: QuotientLogger = null!;
+  public tracer: TracingResource = null!;
 
   constructor(apiKey?: string) {
     const key = apiKey || process.env.QUOTIENT_API_KEY;
@@ -33,6 +35,9 @@ export class QuotientAI {
     // Create an unconfigured logger instance
     this.logger = new QuotientLogger(this.logs as LogsResource);
 
+    // Create tracing resource
+    this.tracer = new TracingResource(client);
+
     // Authenticate
     try {
       this.auth.authenticate();
@@ -45,4 +50,21 @@ export class QuotientAI {
       return;
     }
   }
+
+  /**
+   * Direct access to trace decorator to match Python API style
+   * Usage: @quotient.trace() instead of @quotient.tracer.trace()
+   */
+  trace() {
+    return this.tracer.trace();
+  }
 }
+
+// Export types and classes
+export { BaseQuotientClient } from './client';
+export { QuotientLogger } from './logger';
+export { AuthResource } from './resources/auth';
+export { LogsResource, Log } from './resources/logs';
+export { TracingResource, QuotientAttributes, TracingConfig } from './tracing';
+export { ValidationError, QuotientAIError, logError } from './exceptions';
+export * from './types';
