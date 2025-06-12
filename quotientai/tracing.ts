@@ -2,7 +2,6 @@ import { trace, SpanStatusCode } from '@opentelemetry/api';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { resourceFromAttributes } from '@opentelemetry/resources';
-import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { logError } from './exceptions';
 
@@ -161,8 +160,6 @@ export class TracingResource {
 
       // Create resource with app-specific attributes
       const resource = resourceFromAttributes({
-        [SemanticResourceAttributes.SERVICE_NAME]: this.appName,
-        [SemanticResourceAttributes.SERVICE_VERSION]: '1.0.0',
         [QuotientAttributes.APP_NAME]: this.appName,
         [QuotientAttributes.ENVIRONMENT]: this.environment,
       });
