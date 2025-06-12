@@ -32,14 +32,59 @@ export class TracingResource {
   private endpoint: string;
   private headers: Record<string, string> = {};
 
+  // Static registry to track all instances for cleanup
+  private static instances = new Set<TracingResource>();
+  private static cleanupRegistered = false;
+
   constructor(client: any) {
     this.client = client;
     this.endpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:8082/api/v1/traces';
     
-    // Setup cleanup on process exit
-    process.on('SIGINT', () => this.cleanup());
-    process.on('SIGTERM', () => this.cleanup());
-    process.on('exit', () => this.cleanup());
+    // Register this instance for cleanup
+    TracingResource.instances.add(this);
+    
+    // Register cleanup handlers only once (similar to Python's atexit.register)
+    if (!TracingResource.cleanupRegistered) {
+      TracingResource.registerCleanupHandlers();
+      TracingResource.cleanupRegistered = true;
+    }
+  }
+
+  /**
+   * Register cleanup handlers for all process exit scenarios
+   * This is similar to Python's atexit.register(self._cleanup)
+   */
+  private static registerCleanupHandlers(): void {
+    const cleanupAllInstances = () => {
+      // Cleanup all TracingResource instances
+      for (const instance of TracingResource.instances) {
+        try {
+          instance._cleanup();
+        } catch (error) {
+          console.error('Error during tracing cleanup:', error);
+        }
+      }
+      TracingResource.instances.clear();
+    };
+
+    // Register cleanup for various exit scenarios
+    process.on('SIGINT', cleanupAllInstances);     // Ctrl+C
+    process.on('SIGTERM', cleanupAllInstances);    // Termination signal
+    process.on('exit', cleanupAllInstances);       // Normal exit
+    process.on('beforeExit', cleanupAllInstances); // Before exit
+    
+    // Handle uncaught exceptions and unhandled rejections
+    process.on('uncaughtException', (error) => {
+      console.error('Uncaught exception:', error);
+      cleanupAllInstances();
+      process.exit(1);
+    });
+    
+    process.on('unhandledRejection', (reason, promise) => {
+      console.error('Unhandled rejection at:', promise, 'reason:', reason);
+      cleanupAllInstances();
+      process.exit(1);
+    });
   }
 
   init(config: TracingConfig): void {
@@ -372,7 +417,11 @@ export class TracingResource {
     });
   }
 
-  private cleanup(): void {
+  /**
+   * Internal cleanup method (similar to Python's _cleanup)
+   * This is called automatically on process exit via the registered handlers
+   */
+  private _cleanup(): void {
     if (this.sdk) {
       try {
         this.sdk.shutdown();
@@ -386,10 +435,13 @@ export class TracingResource {
   }
 
   /**
-   * Public cleanup method
+   * Public cleanup method (similar to Python's cleanup method)
+   * This can be called manually, but cleanup also happens automatically on exit
    */
   shutdown(): void {
-    this.cleanup();
+    this._cleanup();
+    // Remove from instances registry
+    TracingResource.instances.delete(this);
   }
 
   /**
