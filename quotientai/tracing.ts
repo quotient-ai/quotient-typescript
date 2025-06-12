@@ -136,7 +136,10 @@ export class TracingResource {
       this.tracer = trace.getTracer('quotient-tracer', '1.0.0');
       this.isConfigured = true;
 
+      console.log(`Tracing initialized successfully for app: ${this.appName}, environment: ${this.environment}, endpoint: ${this.endpoint}`);
+
     } catch (error) {
+      console.error('Failed to setup tracing:', error);
       logError(new Error(`Failed to setup tracing: ${error}`));
       this.tracer = null;
     }
@@ -186,56 +189,36 @@ export class TracingResource {
             return target.apply(this, args);
           }
 
-          // Check if function is async
-          const isAsync = target.constructor.name === 'AsyncFunction';
-
-          if (isAsync) {
-            return tracingResource.tracer.startActiveSpan(spanName, async (span: any) => {
-              try {
-                // Set span attributes
-                span.setAttributes({
-                  [QuotientAttributes.APP_NAME]: tracingResource.appName,
-                  [QuotientAttributes.ENVIRONMENT]: tracingResource.environment,
-                });
-                
-                const result = await target.apply(this, args);
+          return tracingResource.tracer.startActiveSpan(spanName, async (span: any) => {
+            try {
+              // Set span attributes
+              span.setAttributes({
+                [QuotientAttributes.APP_NAME]: tracingResource.appName,
+                [QuotientAttributes.ENVIRONMENT]: tracingResource.environment,
+              });
+              
+              const result = target.apply(this, args);
+              
+              // Check if result is a Promise
+              if (result && typeof result.then === 'function') {
+                const awaitedResult = await result;
+                span.setStatus({ code: SpanStatusCode.OK });
+                return awaitedResult;
+              } else {
                 span.setStatus({ code: SpanStatusCode.OK });
                 return result;
-              } catch (error) {
-                span.setStatus({ 
-                  code: SpanStatusCode.ERROR, 
-                  message: error instanceof Error ? error.message : 'Unknown error' 
-                });
-                span.recordException(error as Error);
-                throw error;
-              } finally {
-                span.end();
               }
-            });
-          } else {
-            return tracingResource.tracer.startActiveSpan(spanName, (span: any) => {
-              try {
-                // Set span attributes
-                span.setAttributes({
-                  [QuotientAttributes.APP_NAME]: tracingResource.appName,
-                  [QuotientAttributes.ENVIRONMENT]: tracingResource.environment,
-                });
-                
-                const result = target.apply(this, args);
-                span.setStatus({ code: SpanStatusCode.OK });
-                return result;
-              } catch (error) {
-                span.setStatus({ 
-                  code: SpanStatusCode.ERROR, 
-                  message: error instanceof Error ? error.message : 'Unknown error' 
-                });
-                span.recordException(error as Error);
-                throw error;
-              } finally {
-                span.end();
-              }
-            });
-          }
+            } catch (error) {
+              span.setStatus({ 
+                code: SpanStatusCode.ERROR, 
+                message: error instanceof Error ? error.message : 'Unknown error' 
+              });
+              span.recordException(error as Error);
+              throw error;
+            } finally {
+              span.end();
+            }
+          });
         };
       }
 
@@ -259,56 +242,36 @@ export class TracingResource {
             return originalFunction.apply(this, args);
           }
 
-          // Check if function is async
-          const isAsync = originalFunction.constructor.name === 'AsyncFunction';
-
-          if (isAsync) {
-            return tracingResource.tracer.startActiveSpan(spanName, async (span: any) => {
-              try {
-                // Set span attributes
-                span.setAttributes({
-                  [QuotientAttributes.APP_NAME]: tracingResource.appName,
-                  [QuotientAttributes.ENVIRONMENT]: tracingResource.environment,
-                });
-                
-                const result = await originalFunction.apply(this, args);
+          return tracingResource.tracer.startActiveSpan(spanName, async (span: any) => {
+            try {
+              // Set span attributes
+              span.setAttributes({
+                [QuotientAttributes.APP_NAME]: tracingResource.appName,
+                [QuotientAttributes.ENVIRONMENT]: tracingResource.environment,
+              });
+              
+              const result = originalFunction.apply(this, args);
+              
+              // Check if result is a Promise
+              if (result && typeof result.then === 'function') {
+                const awaitedResult = await result;
+                span.setStatus({ code: SpanStatusCode.OK });
+                return awaitedResult;
+              } else {
                 span.setStatus({ code: SpanStatusCode.OK });
                 return result;
-              } catch (error) {
-                span.setStatus({ 
-                  code: SpanStatusCode.ERROR, 
-                  message: error instanceof Error ? error.message : 'Unknown error' 
-                });
-                span.recordException(error as Error);
-                throw error;
-              } finally {
-                span.end();
               }
-            });
-          } else {
-            return tracingResource.tracer.startActiveSpan(spanName, (span: any) => {
-              try {
-                // Set span attributes
-                span.setAttributes({
-                  [QuotientAttributes.APP_NAME]: tracingResource.appName,
-                  [QuotientAttributes.ENVIRONMENT]: tracingResource.environment,
-                });
-                
-                const result = originalFunction.apply(this, args);
-                span.setStatus({ code: SpanStatusCode.OK });
-                return result;
-              } catch (error) {
-                span.setStatus({ 
-                  code: SpanStatusCode.ERROR, 
-                  message: error instanceof Error ? error.message : 'Unknown error' 
-                });
-                span.recordException(error as Error);
-                throw error;
-              } finally {
-                span.end();
-              }
-            });
-          }
+            } catch (error) {
+              span.setStatus({ 
+                code: SpanStatusCode.ERROR, 
+                message: error instanceof Error ? error.message : 'Unknown error' 
+              });
+              span.recordException(error as Error);
+              throw error;
+            } finally {
+              span.end();
+            }
+          });
         };
 
         // Copy properties from original function
@@ -337,56 +300,36 @@ export class TracingResource {
           return originalMethod.apply(this, args);
         }
 
-        // Check if function is async
-        const isAsync = originalMethod.constructor.name === 'AsyncFunction';
-
-        if (isAsync) {
-          return tracingResource.tracer.startActiveSpan(spanName, async (span: any) => {
-            try {
-              // Set span attributes
-              span.setAttributes({
-                [QuotientAttributes.APP_NAME]: tracingResource.appName,
-                [QuotientAttributes.ENVIRONMENT]: tracingResource.environment,
-              });
-              
-              const result = await originalMethod.apply(this, args);
+        return tracingResource.tracer.startActiveSpan(spanName, async (span: any) => {
+          try {
+            // Set span attributes
+            span.setAttributes({
+              [QuotientAttributes.APP_NAME]: tracingResource.appName,
+              [QuotientAttributes.ENVIRONMENT]: tracingResource.environment,
+            });
+            
+            const result = originalMethod.apply(this, args);
+            
+            // Check if result is a Promise
+            if (result && typeof result.then === 'function') {
+              const awaitedResult = await result;
+              span.setStatus({ code: SpanStatusCode.OK });
+              return awaitedResult;
+            } else {
               span.setStatus({ code: SpanStatusCode.OK });
               return result;
-            } catch (error) {
-              span.setStatus({ 
-                code: SpanStatusCode.ERROR, 
-                message: error instanceof Error ? error.message : 'Unknown error' 
-              });
-              span.recordException(error as Error);
-              throw error;
-            } finally {
-              span.end();
             }
-          });
-        } else {
-          return tracingResource.tracer.startActiveSpan(spanName, (span: any) => {
-            try {
-              // Set span attributes
-              span.setAttributes({
-                [QuotientAttributes.APP_NAME]: tracingResource.appName,
-                [QuotientAttributes.ENVIRONMENT]: tracingResource.environment,
-              });
-              
-              const result = originalMethod.apply(this, args);
-              span.setStatus({ code: SpanStatusCode.OK });
-              return result;
-            } catch (error) {
-              span.setStatus({ 
-                code: SpanStatusCode.ERROR, 
-                message: error instanceof Error ? error.message : 'Unknown error' 
-              });
-              span.recordException(error as Error);
-              throw error;
-            } finally {
-              span.end();
-            }
-          });
-        }
+          } catch (error) {
+            span.setStatus({ 
+              code: SpanStatusCode.ERROR, 
+              message: error instanceof Error ? error.message : 'Unknown error' 
+            });
+            span.recordException(error as Error);
+            throw error;
+          } finally {
+            span.end();
+          }
+        });
       };
 
       return descriptor;
@@ -396,43 +339,7 @@ export class TracingResource {
   /**
    * Manual span creation for more control
    */
-  startSpan(name: string, callback: (span: any) => any): any {
-    if (!this.isConfigured) {
-      this.setupTracer();
-    }
-
-    if (!this.tracer) {
-      return callback(null);
-    }
-
-    return this.tracer.startActiveSpan(name, (span: any) => {
-      try {
-        // Set span attributes
-        span.setAttributes({
-          [QuotientAttributes.APP_NAME]: this.appName,
-          [QuotientAttributes.ENVIRONMENT]: this.environment,
-        });
-        
-        const result = callback(span);
-        span.setStatus({ code: SpanStatusCode.OK });
-        return result;
-      } catch (error) {
-        span.setStatus({ 
-          code: SpanStatusCode.ERROR, 
-          message: error instanceof Error ? error.message : 'Unknown error' 
-        });
-        span.recordException(error as Error);
-        throw error;
-      } finally {
-        span.end();
-      }
-    });
-  }
-
-  /**
-   * Async version of manual span creation
-   */
-  async startSpanAsync(name: string, callback: (span: any) => Promise<any>): Promise<any> {
+  async startSpan(name: string, callback: (span: any) => Promise<any>): Promise<any> {
     if (!this.isConfigured) {
       this.setupTracer();
     }
