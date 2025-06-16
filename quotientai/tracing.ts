@@ -4,6 +4,7 @@ import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { logError } from './exceptions';
+import { INSTRUMENTATION_CONFIGS } from './config/instrumentations';
 
 export enum QuotientAttributes {
   APP_NAME = 'app.name',
@@ -22,11 +23,12 @@ export class TracingResource {
   private sdk: NodeSDK | null = null;
   private tracer: any = null;
   private isConfigured = false;
-  
+
   // Store configuration for reuse
   private appName: string | null = null;
   private environment: string | null = null;
   private instruments: any[] = [];
+  private detectedModules: Map<string, string> = new Map();
   private endpoint: string;
   private headers: Record<string, string> = {};
 
@@ -36,11 +38,12 @@ export class TracingResource {
 
   constructor(client: any) {
     this.client = client;
-    this.endpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:8082/api/v1/traces';
-    
+    this.endpoint =
+      process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'https://api.quotientai.co/api/v1/traces';
+
     // Register this instance for cleanup
     TracingResource.instances.add(this);
-    
+
     // Register cleanup handlers only once (similar to Python's atexit.register)
     if (!TracingResource.cleanupRegistered) {
       TracingResource.registerCleanupHandlers();
@@ -50,7 +53,6 @@ export class TracingResource {
 
   /**
    * Register cleanup handlers for all process exit scenarios
-   * This is similar to Python's atexit.register(self._cleanup)
    */
   private static registerCleanupHandlers(): void {
     const cleanupAllInstances = async () => {
@@ -61,13 +63,11 @@ export class TracingResource {
             await instance.sdk.shutdown();
           }
         } catch (error) {
-          console.error('Error during auto-flush');
+          logError(new Error(`Error during auto-flush: ${error}`));
         }
       });
-      // Wait for all flushes to complete
       await Promise.all(flushPromises);
-      
-      // Clear instances registry
+
       TracingResource.instances.clear();
     };
 
@@ -75,23 +75,23 @@ export class TracingResource {
     process.on('SIGINT', () => {
       cleanupAllInstances().then(() => process.exit(0));
     });
-    
+
     process.on('SIGTERM', () => {
       cleanupAllInstances().then(() => process.exit(0));
     });
-    
+
     process.on('beforeExit', () => {
       cleanupAllInstances();
     });
-    
+
     // Handle uncaught exceptions and unhandled rejections
     process.on('uncaughtException', (error) => {
-      console.error('Uncaught exception:', error);
+      logError(new Error(`Uncaught exception: ${error}`));
       cleanupAllInstances().then(() => process.exit(1));
     });
-    
+
     process.on('unhandledRejection', (reason, promise) => {
-      console.error('Unhandled rejection at:', promise, 'reason:', reason);
+      logError(new Error(`Unhandled rejection at: ${promise}, reason: ${reason}`));
       cleanupAllInstances().then(() => process.exit(1));
     });
   }
@@ -109,13 +109,13 @@ export class TracingResource {
 
     this.appName = config.app_name;
     this.environment = config.environment;
-    
+
     // Auto-instrument all supported libraries that are available
     this.instruments = this.createAutoInstruments();
-    
+
     this.endpoint = config.endpoint || this.endpoint;
     this.headers = config.headers || {};
-    
+
     // Initialize tracer with OTLP exporter
     this.setupTracer();
   }
@@ -124,33 +124,17 @@ export class TracingResource {
    * Create instrumentation instances for all supported libraries that are available
    */
   private createAutoInstruments(): any[] {
-    const autoInstruments: any[] = [];
+    const instruments: any[] = [];
     const detectedLibraries: string[] = [];
-    
-    // Define available instrumentations with their package detection
-    const instrumentationConfigs = [
-      {
-        name: 'OpenAIInstrumentation',
-        moduleName: ['openai'],
-        packageName: '@arizeai/openinference-instrumentation-openai',
-        className: 'OpenAIInstrumentation'
-      },
-      {
-        name: 'LangChainInstrumentation', 
-        moduleName: ['langchain', '@langchain/core', '@langchain/openai'],
-        packageName: '@arizeai/openinference-instrumentation-langchain',
-        className: 'LangChainInstrumentation'
-      }
-    ];
 
-    for (const lib of instrumentationConfigs) {
+    for (const lib of INSTRUMENTATION_CONFIGS) {
       try {
         // Handle both single module names and arrays of module names
         const moduleNames = Array.isArray(lib.moduleName) ? lib.moduleName : [lib.moduleName];
         let targetModule = null;
         let detectedModuleName = '';
-        
-        // Check if any of the target modules are available
+
+        // Check if any of the target modules are available (user must install these)
         for (const moduleName of moduleNames) {
           targetModule = this.getModuleExports(moduleName);
           if (targetModule) {
@@ -158,40 +142,24 @@ export class TracingResource {
             break;
           }
         }
-        
+
         if (!targetModule) {
           continue; // No target modules found, skip
         }
 
-        // Check if the instrumentation package is available
+        // Get the instrumentation package (bundled with QuotientAI)
         const instrumentationModule = this.getModuleExports(lib.packageName);
-        if (!instrumentationModule) {
-          console.warn(`${lib.name} detected but ${lib.packageName} not installed. Install it for automatic instrumentation.`);
-          continue;
-        }
-
-        // Create instrumentation instance
         const InstrumentationClass = instrumentationModule[lib.className];
-        if (InstrumentationClass) {
-          const instrument = new InstrumentationClass();
-          autoInstruments.push(instrument);
-          detectedLibraries.push(lib.name.replace('Instrumentation', ''));
-        } else {
-          console.warn(`${lib.className} not found in ${lib.packageName}`);
-        }
+        const instrument = new InstrumentationClass();
+        instruments.push(instrument);
+        detectedLibraries.push(lib.name.replace('Instrumentation', ''));
+        this.detectedModules.set(lib.name, detectedModuleName);
       } catch (error) {
-        console.warn(`Failed to auto-instrument ${lib.name}:`, error);
+        // Silently skip if instrumentation creation fails
       }
     }
 
-    // Log which instrumentations were successfully initialized
-    if (detectedLibraries.length > 0) {
-      console.log(`🔧 Auto-initialized instrumentations: ${detectedLibraries.join(', ')}`);
-    } else {
-      console.log('ℹ️  No supported libraries detected for auto-instrumentation');
-    }
-
-    return autoInstruments;
+    return instruments;
   }
 
   private setupTracer(): void {
@@ -200,14 +168,12 @@ export class TracingResource {
     }
 
     try {
-      // Setup default headers
       const defaultHeaders = {
-        'Authorization': `Bearer ${this.client.apiKey}`,
+        Authorization: `Bearer ${this.client.apiKey}`,
         'Content-Type': 'application/x-protobuf',
         ...this.headers,
       };
 
-      // Parse additional headers from environment
       if (process.env.OTEL_EXPORTER_OTLP_HEADERS) {
         try {
           const envHeaders = JSON.parse(process.env.OTEL_EXPORTER_OTLP_HEADERS);
@@ -219,116 +185,80 @@ export class TracingResource {
         }
       }
 
-      // Create OTLP exporter
       const traceExporter = new OTLPTraceExporter({
         url: this.endpoint,
         headers: defaultHeaders,
         keepAlive: true,
       });
 
-      // Create resource with app-specific attributes
       const resource = resourceFromAttributes({
         [QuotientAttributes.APP_NAME]: this.appName,
         [QuotientAttributes.ENVIRONMENT]: this.environment,
       });
 
-      // Initialize SDK with proper configuration including instruments
       this.sdk = new NodeSDK({
         resource,
         spanProcessor: new BatchSpanProcessor(traceExporter),
-        instrumentations: this.instruments,
       });
 
       // Start the SDK
       this.sdk.start();
-      
-      // Handle manual instrumentation for ES modules
+
       this.handleManualInstrumentation();
-      
-      // Get tracer
+
       this.tracer = trace.getTracer('quotient-tracer', '1.0.0');
       this.isConfigured = true;
 
-      console.log(`Tracing initialized successfully for app: ${this.appName}, environment: ${this.environment}, collector endpoint: ${this.endpoint}`);
-
+      console.log(
+        `Tracing initialized successfully for app: ${this.appName}, environment: ${this.environment}, collector endpoint: ${this.endpoint}`
+      );
     } catch (error) {
-      console.error('Failed to setup tracing:', error);
       logError(new Error(`Failed to setup tracing: ${error}`));
       this.tracer = null;
     }
   }
 
   /**
-   * Handle manual instrumentation for ES modules where automatic patching doesn't work
+   * Always do manual instrumentation instead of auto-instrumentation for better reliability
    */
   private handleManualInstrumentation(): void {
     for (const instrument of this.instruments) {
       // Check if this instrumentation has a manuallyInstrument method
       if (typeof instrument.manuallyInstrument === 'function') {
         try {
+          const instrumentName = instrument.constructor.name;
+
           // Special handling for LangChain - must manually instrument the callbacks manager
-          if (instrument.constructor.name === 'LangChainInstrumentation') {
+          if (instrumentName === 'LangChainInstrumentation') {
             try {
               // LangChain requires manual instrumentation of the callbacks manager module
-              const callbackManagerModule = this.getModuleExports('@langchain/core/callbacks/manager');
+              const callbackManagerModule = this.getModuleExports(
+                '@langchain/core/callbacks/manager'
+              );
               if (callbackManagerModule) {
                 instrument.manuallyInstrument(callbackManagerModule);
-                console.log('LangChain callbacks manager manually instrumented successfully');
               } else {
-                console.warn('LangChain callbacks manager module not found, instrumentation may not work');
+                // Silently skip if callbacks manager not found
               }
             } catch (langchainError) {
-              const errorMessage = langchainError instanceof Error ? langchainError.message : String(langchainError);
-              console.warn(`LangChain manual instrumentation failed:`, errorMessage);
+              // Silently skip if LangChain manual instrumentation fails
             }
             continue;
           }
-          
-          // For other instrumentations, try to determine what module this instrumentation is for
-          const targetModule = this.getTargetModuleForInstrumentation(instrument);
-          if (targetModule) {
-            const moduleName = targetModule.name;
-            const moduleExports = this.getModuleExports(moduleName);
-            
+
+          // For other instrumentations, use the stored detected module
+          const detectedModuleName = this.detectedModules.get(instrumentName);
+          if (detectedModuleName) {
+            const moduleExports = this.getModuleExports(detectedModuleName);
             if (moduleExports) {
               instrument.manuallyInstrument(moduleExports);
             }
           }
         } catch (error) {
-          console.warn(`Failed to manually instrument module for ${instrument.constructor.name}:`, error);
+          // Silently skip if manual instrumentation fails
         }
       }
     }
-  }
-
-  /**
-   * Determine what module an instrumentation is targeting
-   */
-  private getTargetModuleForInstrumentation(instrument: any): { name: string } | null {
-    const instrumentName = instrument.constructor.name;
-    
-    // Map supported instrumentation class names to their target modules
-    const supportedInstrumentations: Record<string, string[]> = {
-      'OpenAIInstrumentation': ['openai'],
-      'LangChainInstrumentation': ['langchain', '@langchain/core', '@langchain/openai'],
-    };
-
-    // Check if this is a supported instrumentation
-    if (supportedInstrumentations[instrumentName]) {
-      const moduleNames = supportedInstrumentations[instrumentName];
-      
-      // Try to find which module is actually available
-      for (const moduleName of moduleNames) {
-        const moduleExports = this.getModuleExports(moduleName);
-        if (moduleExports) {
-          return { name: moduleName };
-        }
-      }
-    }
-
-    // Log unsupported instrumentations for debugging
-    console.warn(`Unsupported instrumentation: ${instrumentName}. Currently supported: OpenAI, LangChain`);
-    return null;
   }
 
   /**
@@ -346,7 +276,7 @@ export class TracingResource {
     }
 
     try {
-      // Try direct require (this works in most cases)
+      // Try direct require
       return require(moduleName);
     } catch {
       // Ignore if require fails
@@ -360,12 +290,11 @@ export class TracingResource {
       // Ignore if dynamic require fails
     }
 
-    
     return null;
   }
 
   /**
-   * Manual span creation for more control
+   * Manual span creation
    */
   async startSpan(name: string, callback: (span: any) => Promise<any>): Promise<any> {
     if (!this.isConfigured) {
@@ -383,14 +312,14 @@ export class TracingResource {
           [QuotientAttributes.APP_NAME]: this.appName,
           [QuotientAttributes.ENVIRONMENT]: this.environment,
         });
-        
+
         const result = await callback(span);
         span.setStatus({ code: SpanStatusCode.OK });
         return result;
       } catch (error) {
-        span.setStatus({ 
-          code: SpanStatusCode.ERROR, 
-          message: error instanceof Error ? error.message : 'Unknown error' 
+        span.setStatus({
+          code: SpanStatusCode.ERROR,
+          message: error instanceof Error ? error.message : 'Unknown error',
         });
         span.recordException(error as Error);
         throw error;
@@ -402,7 +331,7 @@ export class TracingResource {
 
   /**
    * Force flush any pending spans to ensure they are exported
-   * NOTE: This is optional - spans are automatically flushed on process exit
+   * NOTE: spans are automatically flushed on process exit
    */
   async forceFlush(): Promise<void> {
     if (this.sdk) {
@@ -412,7 +341,7 @@ export class TracingResource {
         this.isConfigured = false;
         this.tracer = null;
       } catch (error) {
-        console.error('Error flushing spans:', error);
+        logError(new Error(`Error flushing spans: ${error}`));
       }
     }
   }
@@ -440,24 +369,6 @@ export class TracingResource {
    */
   shutdown(): void {
     this._cleanup();
-    // Remove from instances registry
     TracingResource.instances.delete(this);
   }
-
-  /**
-   * Check if tracing is configured and available
-   */
-  isTracingEnabled(): boolean {
-    return this.isConfigured && this.tracer !== null;
-  }
-
-  /**
-   * Get current configuration
-   */
-  getConfig(): { appName: string | null; environment: string | null } {
-    return {
-      appName: this.appName,
-      environment: this.environment,
-    };
-  }
-} 
+}
