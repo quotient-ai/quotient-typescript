@@ -181,7 +181,7 @@ export class TracingResource {
             Object.assign(defaultHeaders, envHeaders);
           }
         } catch (error) {
-          console.warn('Failed to parse OTEL_EXPORTER_OTLP_HEADERS, using default headers');
+          console.warn('Failed to parse OTEL_EXPORTER_OTLP_HEADERS, using default headers...');
         }
       }
 
