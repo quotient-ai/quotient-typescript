@@ -4,7 +4,7 @@
 
 ## Overview
 
-`quotientai` is an SDK and CLI for logging data to [Quotient](https://quotientai.co), and running hallucination and document attribution detections for retrieval and search-augmented AI systems.
+`quotientai` is an SDK and CLI for logging data to [Quotient](https://quotientai.co), running hallucination and document attribution detections for retrieval and search-augmented AI systems, and **automatically tracing AI/ML applications**.
 
 ## Installation
 
@@ -13,6 +13,8 @@ npm install quotientai
 ```
 
 ## Usage
+
+### Logging and Hallucination Detection
 
 Create an API key on [Quotient](https://app.quotientai.co) and set it as an environment variable called `QUOTIENT_API_KEY`. Then follow the examples below or see our [docs](https://docs.quotientai.co) for a more comprehensive walkthrough.
 
@@ -43,6 +45,32 @@ const logId = await quotientLogger.log({
 const detectionResults = await quotientLogger.pollForDetections(logId);
 ```
 
+### Auto-Instrumentation for AI/ML Libraries
+
+QuotientAI automatically detects and instruments supported AI/ML libraries with **zero configuration**:
+
+```typescript
+import { QuotientAI } from 'quotientai';
+
+const quotient = new QuotientAI('your-api-key');
+
+// Auto-initialize tracing for all supported libraries
+quotient.tracer.init({
+  app_name: 'my-ai-app',
+  environment: 'production'
+});
+
+// Your AI library calls are now automatically traced
+```
+
+#### Supported Libraries
+
+| Library | Package | Auto-Instrumented |
+|---------|---------|-------------------|
+| **OpenAI SDK** | `openai` | ✅ Automatic |
+| **LangChain** | `langchain`, `@langchain/core` | ✅ Automatic |
+```
+
 ### QuotientAI Client
 
 The main client class that provides access to all QuotientAI resources.
@@ -54,6 +82,12 @@ new QuotientAI(apiKey?: string)
 ```
 
 - `apiKey`: Optional API key. If not provided, will attempt to read from `QUOTIENT_API_KEY` environment variable.
+
+## Examples
+
+Check out the `examples/` directory for complete examples of:
+- OpenAI SDK tracing
+- LangChain tracing
 
 ## Docs
 

@@ -51,13 +51,6 @@ export class QuotientAI {
     }
   }
 
-  /**
-   * Direct access to trace decorator to match Python API style
-   * Usage: @quotient.trace() instead of @quotient.tracer.trace()
-   */
-  trace() {
-    return this.tracer.trace();
-  }
 }
 
 // Export types and classes
