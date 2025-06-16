@@ -1,9 +1,9 @@
 import { BaseQuotientClient } from './client';
 import { QuotientLogger } from './logger';
 import { AuthResource } from './resources/auth';
-import { LogsResource, Log } from './resources/logs';
-import { TracingResource, QuotientAttributes, TracingConfig } from './tracing';
-import { ValidationError, QuotientAIError, logError } from './exceptions';
+import { LogsResource } from './resources/logs';
+import { TracingResource } from './tracing';
+import { logError } from './exceptions';
 
 export class QuotientAI {
   public auth: AuthResource = null!;
@@ -51,3 +51,6 @@ export class QuotientAI {
     }
   }
 }
+
+// Export types that users need
+export { TracingConfig } from './tracing';
