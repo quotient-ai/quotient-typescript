@@ -17,7 +17,7 @@ export class QuotientAI {
       const error = new Error(
         'Could not find API key. Either pass apiKey to QuotientAI() or ' +
           'set the QUOTIENT_API_KEY environment variable. ' +
-          'If you do not have an API key, you can create one at https://app.quotientai.co in your settings page'
+          'If you do not have an API key, you can create one at https://app.quotientai.co in your settings page.'
       );
       logError(error, 'QuotientAI.constructor');
       return;
