@@ -1,6 +1,6 @@
 import { trace, SpanStatusCode } from '@opentelemetry/api';
 import { NodeSDK } from '@opentelemetry/sdk-node';
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { logError } from './exceptions';
@@ -170,7 +170,7 @@ export class TracingResource {
     try {
       const defaultHeaders = {
         Authorization: `Bearer ${this.client.apiKey}`,
-        'Content-Type': 'application/x-protobuf',
+        // Note: Content-Type header is automatically set by the protobuf exporter
         ...this.headers,
       };
 
