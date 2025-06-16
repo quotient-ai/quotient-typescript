@@ -14,9 +14,7 @@
     "paths": {
       "*": ["node_modules/*"]
     },
-    "types": ["vitest/globals", "node"],
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "types": ["vitest/globals", "node"]
   },
   "include": ["quotientai/**/*", "tests/**/*"],
   "exclude": ["node_modules", "dist"]

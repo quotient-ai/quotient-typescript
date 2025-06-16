@@ -50,14 +50,4 @@ export class QuotientAI {
       return;
     }
   }
-
 }
-
-// Export types and classes
-export { BaseQuotientClient } from './client';
-export { QuotientLogger } from './logger';
-export { AuthResource } from './resources/auth';
-export { LogsResource, Log } from './resources/logs';
-export { TracingResource, QuotientAttributes, TracingConfig } from './tracing';
-export { ValidationError, QuotientAIError, logError } from './exceptions';
-export * from './types';
