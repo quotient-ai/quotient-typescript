@@ -57,7 +57,7 @@ const quotient = new QuotientAI('your-api-key');
 // Auto-initialize tracing for all supported libraries
 quotient.tracer.init({
   app_name: 'my-ai-app',
-  environment: 'production'
+  environment: 'production',
 });
 
 // Your AI library calls are now automatically traced
@@ -65,11 +65,12 @@ quotient.tracer.init({
 
 #### Supported Libraries
 
-| Library | Package | Auto-Instrumented |
-|---------|---------|-------------------|
-| **OpenAI SDK** | `openai` | ✅ Automatic |
-| **LangChain** | `langchain`, `@langchain/core` | ✅ Automatic |
-```
+| Library        | Package                        | Auto-Instrumented |
+| -------------- | ------------------------------ | ----------------- |
+| **OpenAI SDK** | `openai`                       | ✅ Automatic      |
+| **LangChain**  | `langchain`, `@langchain/core` | ✅ Automatic      |
+
+````
 
 ### QuotientAI Client
 
@@ -79,13 +80,14 @@ The main client class that provides access to all QuotientAI resources.
 
 ```typescript
 new QuotientAI(apiKey?: string)
-```
+````
 
 - `apiKey`: Optional API key. If not provided, will attempt to read from `QUOTIENT_API_KEY` environment variable.
 
 ## Examples
 
 Check out the `examples/` directory for complete examples of:
+
 - OpenAI SDK tracing
 - LangChain tracing
 

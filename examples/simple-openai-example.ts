@@ -5,8 +5,8 @@ const quotient = new QuotientAI(process.env.QUOTIENT_API_KEY);
 
 // Initialize tracing - automatically detects and instruments all supported libraries!
 quotient.tracer.init({
-  app_name: "openinference_test_openai",
-  environment: "local"
+  app_name: 'openinference_test_openai',
+  environment: 'local',
 });
 
 async function testOpenAI() {
@@ -16,20 +16,20 @@ async function testOpenAI() {
 
   try {
     const response = await client.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: 'gpt-3.5-turbo',
       messages: [
         {
-          role: "user",
-          content: "Write a haiku about programming"
-        }
+          role: 'user',
+          content: 'Write a haiku about programming',
+        },
       ],
-      max_tokens: 50
+      max_tokens: 50,
     });
 
-    console.log("OpenAI Response:", response.choices[0]?.message?.content);
+    console.log('OpenAI Response:', response.choices[0]?.message?.content);
     return response;
   } catch (error) {
-    console.log("OpenAI call failed (expected with fake key):", error.message);
+    console.log('OpenAI call failed (expected with fake key):', error.message);
     return null;
   }
 }

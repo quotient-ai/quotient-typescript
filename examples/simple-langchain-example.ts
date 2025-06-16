@@ -9,7 +9,7 @@ const quotient = new QuotientAI(process.env.QUOTIENT_API_KEY);
 // Initialize tracing - automatically detects and instruments all supported libraries!
 quotient.tracer.init({
   app_name: 'openinference_test_langchain',
-  environment: 'local'
+  environment: 'local',
 });
 
 async function testLangChain() {
@@ -24,31 +24,28 @@ async function testLangChain() {
     console.log('Test 1: Simple invoke');
     const response1 = await chat.invoke('Write a haiku about artificial intelligence');
     console.log('LangChain response 1:', response1.content);
-    
+
     // Test 2: Using HumanMessage
     console.log('Test 2: Using HumanMessage');
-    const response2 = await chat.invoke([
-      new HumanMessage("Write a short poem about programming")
-    ]);
+    const response2 = await chat.invoke([new HumanMessage('Write a short poem about programming')]);
     console.log('LangChain response 2:', response2.content);
-    
+
     // Test 3: Using ChatPromptTemplate (more complex chain)
     console.log('Test 3: Using ChatPromptTemplate');
     const prompt = ChatPromptTemplate.fromMessages([
-      ["human", "Tell me a {adjective} fact about {topic}"]
+      ['human', 'Tell me a {adjective} fact about {topic}'],
     ]);
-    
+
     const chain = prompt.pipe(chat);
     const response3 = await chain.invoke({
-      adjective: "interesting",
-      topic: "machine learning"
+      adjective: 'interesting',
+      topic: 'machine learning',
     });
     console.log('LangChain response 3:', response3.content);
-    
   } catch (error) {
     console.error('LangChain call failed:', error.message);
   }
 }
 
 // Run the test
-testLangChain(); 
+testLangChain();
