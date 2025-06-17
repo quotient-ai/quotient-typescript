@@ -4,7 +4,6 @@ import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { logError } from './exceptions';
-import { INSTRUMENTATION_CONFIGS } from './config/instrumentations';
 
 export enum QuotientAttributes {
   APP_NAME = 'app.name',
@@ -16,6 +15,7 @@ export interface TracingConfig {
   environment: string;
   endpoint?: string;
   headers?: Record<string, string>;
+  instruments?: any[];
 }
 
 export class TracingResource {
@@ -106,60 +106,19 @@ export class TracingResource {
       logError(new Error('environment must be a non-empty string'));
       return;
     }
+    if (config.instruments && !Array.isArray(config.instruments)) {
+      logError(new Error('instruments must be an array'));
+      return;
+    }
 
     this.appName = config.app_name;
     this.environment = config.environment;
-
-    // Auto-instrument all supported libraries that are available
-    this.instruments = this.createAutoInstruments();
-
+    this.instruments = config.instruments || [];
     this.endpoint = config.endpoint || this.endpoint;
     this.headers = config.headers || {};
 
     // Initialize tracer with OTLP exporter
     this.setupTracer();
-  }
-
-  /**
-   * Create instrumentation instances for all supported libraries that are available
-   */
-  private createAutoInstruments(): any[] {
-    const instruments: any[] = [];
-    const detectedLibraries: string[] = [];
-
-    for (const lib of INSTRUMENTATION_CONFIGS) {
-      try {
-        // Handle both single module names and arrays of module names
-        const moduleNames = Array.isArray(lib.moduleName) ? lib.moduleName : [lib.moduleName];
-        let targetModule = null;
-        let detectedModuleName = '';
-
-        // Check if any of the target modules are available (user must install these)
-        for (const moduleName of moduleNames) {
-          targetModule = this.getModuleExports(moduleName);
-          if (targetModule) {
-            detectedModuleName = moduleName;
-            break;
-          }
-        }
-
-        if (!targetModule) {
-          continue; // No target modules found, skip
-        }
-
-        // Get the instrumentation package (bundled with QuotientAI)
-        const instrumentationModule = this.getModuleExports(lib.packageName);
-        const InstrumentationClass = instrumentationModule[lib.className];
-        const instrument = new InstrumentationClass();
-        instruments.push(instrument);
-        detectedLibraries.push(lib.name.replace('Instrumentation', ''));
-        this.detectedModules.set(lib.name, detectedModuleName);
-      } catch (error) {
-        // Silently skip if instrumentation creation fails
-      }
-    }
-
-    return instruments;
   }
 
   private setupTracer(): void {
@@ -209,8 +168,9 @@ export class TracingResource {
       this.tracer = trace.getTracer('quotient-tracer', '1.0.0');
       this.isConfigured = true;
 
+      const instrumentNames = this.instruments.map((i) => i.constructor.name).join(', ');
       console.log(
-        `Tracing initialized successfully for app: ${this.appName}, environment: ${this.environment}, collector endpoint: ${this.endpoint}`
+        `Tracing initialized successfully for app: ${this.appName}, environment: ${this.environment}, collector endpoint: ${this.endpoint}${instrumentNames ? `, instruments: ${instrumentNames}` : ''}`
       );
     } catch (error) {
       logError(new Error(`Failed to setup tracing: ${error}`));
@@ -246,13 +206,17 @@ export class TracingResource {
             continue;
           }
 
-          // For other instrumentations, use the stored detected module
-          const detectedModuleName = this.detectedModules.get(instrumentName);
-          if (detectedModuleName) {
-            const moduleExports = this.getModuleExports(detectedModuleName);
-            if (moduleExports) {
-              instrument.manuallyInstrument(moduleExports);
+          // For OpenAI and other instrumentations, manually instrument the main module
+          if (instrumentName === 'OpenAIInstrumentation') {
+            try {
+              const openaiModule = this.getModuleExports('openai');
+              if (openaiModule) {
+                instrument.manuallyInstrument(openaiModule);
+              }
+            } catch (openaiError) {
+              // Silently skip if OpenAI module not found
             }
+            continue;
           }
         } catch (error) {
           // Silently skip if manual instrumentation fails

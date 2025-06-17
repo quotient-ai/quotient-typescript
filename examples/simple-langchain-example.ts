@@ -1,19 +1,35 @@
+/*
+ * QuotientAI LangChain Example
+ *
+ * Required installations:
+ * npm install quotientai langchain @langchain/core @langchain/openai @arizeai/openinference-instrumentation-langchain
+ *
+ * This example demonstrates:
+ * 1. Manual instrumentation by importing and passing instrumentors
+ * 2. Manual span creation using startSpan()
+ * 3. Complex multi-step workflows with nested spans
+ */
+
 import { QuotientAI } from '../quotientai';
 import { ChatOpenAI } from '@langchain/openai';
 import { HumanMessage } from '@langchain/core/messages';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
+import { LangChainInstrumentation } from '@arizeai/openinference-instrumentation-langchain';
+import { OpenAIInstrumentation } from '@arizeai/openinference-instrumentation-openai';
 
 // Initialize QuotientAI with the provided API key
 const quotient = new QuotientAI(process.env.QUOTIENT_API_KEY);
 
-// Initialize tracing - automatically detects and instruments all supported libraries!
+// Initialize tracing with explicit instrumentors
 quotient.tracer.init({
   app_name: 'openinference_test_langchain',
   environment: 'local',
+  instruments: [new LangChainInstrumentation(), new OpenAIInstrumentation()],
 });
 
 async function testLangChain() {
   try {
+    // OpenAIInstrumentation is needed to instrument the OpenAI client
     const chat = new ChatOpenAI({
       openAIApiKey: process.env.OPENAI_API_KEY,
       modelName: 'gpt-3.5-turbo',

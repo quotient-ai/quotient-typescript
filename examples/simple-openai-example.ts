@@ -1,12 +1,26 @@
+/*
+ * QuotientAI OpenAI Example
+ *
+ * Required installations:
+ * npm install quotientai openai @arizeai/openinference-instrumentation-openai
+ *
+ * This example demonstrates:
+ * 1. Manual instrumentation by importing and passing instrumentors
+ * 2. Manual span creation using startSpan()
+ * 3. Function tracing patterns
+ */
+
 import { QuotientAI } from '../quotientai';
 import OpenAI from 'openai';
+import { OpenAIInstrumentation } from '@arizeai/openinference-instrumentation-openai';
 
 const quotient = new QuotientAI(process.env.QUOTIENT_API_KEY);
 
-// Initialize tracing - automatically detects and instruments all supported libraries!
+// Initialize tracing with explicit instrumentors
 quotient.tracer.init({
   app_name: 'openinference_test_openai',
   environment: 'local',
+  instruments: [new OpenAIInstrumentation()],
 });
 
 async function testOpenAI() {
