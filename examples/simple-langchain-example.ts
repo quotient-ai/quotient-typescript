@@ -47,5 +47,146 @@ async function testLangChain() {
   }
 }
 
-// Run the test
-testLangChain();
+// Example of manual span creation with LangChain
+async function testLangChainWithManualSpan() {
+  const chat = new ChatOpenAI({
+    openAIApiKey: process.env.OPENAI_API_KEY,
+    modelName: 'gpt-3.5-turbo',
+    temperature: 0.9,
+  });
+
+  // Create a manual span for a custom conversation workflow
+  return await quotient.tracer.startSpan('conversation_workflow', async (span) => {
+    try {
+      // Add custom attributes to the span
+      if (span) {
+        span.setAttributes({
+          'workflow.type': 'multi_turn_conversation',
+          'workflow.steps': 3,
+          'model.temperature': 0.9,
+          'conversation.topic': 'creative_writing',
+        });
+      }
+
+      console.log('Starting multi-turn conversation workflow...');
+
+      // Step 1: Initial creative prompt
+      await quotient.tracer.startSpan('conversation_step_1', async (step1Span) => {
+        if (step1Span) {
+          step1Span.setAttributes({
+            'step.number': 1,
+            'step.type': 'initial_prompt',
+            'prompt.category': 'creative',
+          });
+        }
+
+        console.log('Step 1: Getting initial creative response...');
+        const response1 = await chat.invoke('Write a creative opening line for a sci-fi story');
+        console.log('Step 1 Response:', response1.content);
+
+        if (step1Span && response1.content) {
+          step1Span.setAttributes({
+            'response.length': response1.content.length,
+            'response.type': 'creative_opening',
+          });
+        }
+
+        return response1;
+      });
+
+      // Step 2: Follow-up with context
+      await quotient.tracer.startSpan('conversation_step_2', async (step2Span) => {
+        if (step2Span) {
+          step2Span.setAttributes({
+            'step.number': 2,
+            'step.type': 'contextual_followup',
+            'prompt.category': 'expansion',
+          });
+        }
+
+        console.log('Step 2: Expanding the story...');
+        const prompt = ChatPromptTemplate.fromMessages([
+          ['system', 'You are a creative sci-fi writer. Build upon the previous response.'],
+          [
+            'human',
+            'Now write the next 2-3 sentences that continue this story in an exciting way.',
+          ],
+        ]);
+
+        const chain = prompt.pipe(chat);
+        const response2 = await chain.invoke({});
+        console.log('Step 2 Response:', response2.content);
+
+        if (step2Span && response2.content) {
+          step2Span.setAttributes({
+            'response.length': response2.content.length,
+            'chain.components': 'prompt_template + chat_model',
+          });
+        }
+
+        return response2;
+      });
+
+      // Step 3: Final creative conclusion
+      await quotient.tracer.startSpan('conversation_step_3', async (step3Span) => {
+        if (step3Span) {
+          step3Span.setAttributes({
+            'step.number': 3,
+            'step.type': 'conclusion',
+            'prompt.category': 'wrap_up',
+          });
+        }
+
+        console.log('Step 3: Concluding the story segment...');
+        const messages = [
+          new HumanMessage(
+            'Write a dramatic cliffhanger ending for this story segment in 1-2 sentences.'
+          ),
+        ];
+
+        const response3 = await chat.invoke(messages);
+        console.log('Step 3 Response:', response3.content);
+
+        if (step3Span && response3.content) {
+          step3Span.setAttributes({
+            'response.length': response3.content.length,
+            'message.type': 'HumanMessage',
+            'ending.type': 'cliffhanger',
+          });
+        }
+
+        return response3;
+      });
+
+      console.log('Multi-turn conversation workflow completed!');
+
+      // Add final workflow statistics
+      if (span) {
+        span.setAttributes({
+          'workflow.status': 'completed',
+          'workflow.total_steps': 3,
+        });
+      }
+    } catch (error) {
+      console.error('Conversation workflow failed:', error.message);
+
+      // The span will automatically record the exception
+      throw error;
+    }
+  });
+}
+
+async function runAllTests() {
+  console.log('=== Test 1: Automatic LangChain Instrumentation ===');
+  await testLangChain();
+
+  console.log('\n=== Test 2: Manual Span + Automatic LangChain Instrumentation ===');
+  try {
+    await testLangChainWithManualSpan();
+  } catch (error) {
+    console.log('Manual span test completed (error expected with fake API key)');
+  }
+}
+
+// Run all tests to demonstrate both automatic and manual tracing
+runAllTests();
