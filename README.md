@@ -45,30 +45,33 @@ const logId = await quotientLogger.log({
 const detectionResults = await quotientLogger.pollForDetections(logId);
 ```
 
-### Auto-Instrumentation for AI/ML Libraries
+### Instrumentation for AI/ML Libraries with OpenInference
 
-QuotientAI automatically detects and instruments supported AI/ML libraries with **zero configuration**:
+QuotientAI detects and instruments supported AI/ML libraries:
 
 ```typescript
 import { QuotientAI } from 'quotientai';
+import { LangChainInstrumentation } from '@arizeai/openinference-instrumentation-langchain';
+import { OpenAIInstrumentation } from '@arizeai/openinference-instrumentation-openai';
 
 const quotient = new QuotientAI('your-api-key');
 
-// Auto-initialize tracing for all supported libraries
+// Initialize tracing for all supported libraries
 quotient.tracer.init({
   app_name: 'my-ai-app',
   environment: 'production',
+  instruments: [new LangChainInstrumentation(), new OpenAIInstrumentation()],
 });
 
-// Your AI library calls are now automatically traced
+// Your AI library calls are now traced
 ```
 
 #### Supported Libraries
 
-| Library        | Package                        | Auto-Instrumented |
-| -------------- | ------------------------------ | ----------------- |
-| **OpenAI SDK** | `openai`                       | ✅ Automatic      |
-| **LangChain**  | `langchain`, `@langchain/core` | ✅ Automatic      |
+| Library        | Package                        | Supported Instrumentation Package                  |
+| -------------- | ------------------------------ | -------------------------------------------------- |
+| **OpenAI SDK** | `openai`                       | `@arizeai/openinference-instrumentation-langchain` |
+| **LangChain**  | `langchain`, `@langchain/core` | `@arizeai/openinference-instrumentation-langchain` |
 
 ````
 
