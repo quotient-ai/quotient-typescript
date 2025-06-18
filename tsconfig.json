@@ -18,4 +18,4 @@
   },
   "include": ["quotientai/**/*", "tests/**/*"],
   "exclude": ["node_modules", "dist"]
-} 
+}

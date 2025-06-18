@@ -113,7 +113,7 @@ export class QuotientLogger {
   }
 
   // log a message
-  async log(params: Omit<LogEntry, 'appName' | 'environment'>): Promise<any> {
+  async _internalLog(params: Omit<LogEntry, 'appName' | 'environment'>): Promise<any> {
     if (!this.configured) {
       logError(new Error('Logger is not configured. Please call init() before logging.'));
       return null;
@@ -163,7 +163,7 @@ export class QuotientLogger {
   }
 
   // poll for detection results using log id
-  async pollForDetection(
+  async _internalPollForDetection(
     logId: string,
     timeout: number = 300,
     pollInterval: number = 2.0
@@ -220,5 +220,31 @@ export class QuotientLogger {
 
     logError(new Error(`Timed out waiting for detection results after ${timeout} seconds`));
     return null;
+  }
+
+  // log a message
+  async log(params: Omit<LogEntry, 'appName' | 'environment'>): Promise<any> {
+    // Add deprecation warning
+    console.warn(
+      'quotient.logger.log() is deprecated as of 0.0.9 and will be removed in a future version. ' +
+        'Please use quotient.log() instead.'
+    );
+
+    return this._internalLog(params);
+  }
+
+  // poll for detection results using log id
+  async pollForDetection(
+    logId: string,
+    timeout: number = 300,
+    pollInterval: number = 2.0
+  ): Promise<DetectionResults | null> {
+    // Add deprecation warning
+    console.warn(
+      'quotient.logger.poll_for_detection() is deprecated as of 0.0.9 and will be removed in a future version. ' +
+        'Please use quotient.poll_for_detections() instead.'
+    );
+
+    return this._internalPollForDetection(logId, timeout, pollInterval);
   }
 }
