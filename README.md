@@ -45,55 +45,6 @@ const logId = await quotientLogger.log({
 const detectionResults = await quotientLogger.pollForDetections(logId);
 ```
 
-### Instrumentation for AI/ML Libraries with OpenInference
-
-QuotientAI detects and instruments supported AI/ML libraries:
-
-```typescript
-import { QuotientAI } from 'quotientai';
-import { LangChainInstrumentation } from '@arizeai/openinference-instrumentation-langchain';
-import { OpenAIInstrumentation } from '@arizeai/openinference-instrumentation-openai';
-
-const quotient = new QuotientAI('your-api-key');
-
-// Initialize tracing for all supported libraries
-quotient.tracer.init({
-  app_name: 'my-ai-app',
-  environment: 'production',
-  instruments: [new LangChainInstrumentation(), new OpenAIInstrumentation()],
-});
-
-// Your AI library calls are now traced
-```
-
-#### Supported Libraries
-
-| Library        | Package                        | Supported Instrumentation Package                  |
-| -------------- | ------------------------------ | -------------------------------------------------- |
-| **OpenAI SDK** | `openai`                       | `@arizeai/openinference-instrumentation-langchain` |
-| **LangChain**  | `langchain`, `@langchain/core` | `@arizeai/openinference-instrumentation-langchain` |
-
-````
-
-### QuotientAI Client
-
-The main client class that provides access to all QuotientAI resources.
-
-#### Constructor
-
-```typescript
-new QuotientAI(apiKey?: string)
-````
-
-- `apiKey`: Optional API key. If not provided, will attempt to read from `QUOTIENT_API_KEY` environment variable.
-
-## Examples
-
-Check out the `examples/` directory for complete examples of:
-
-- OpenAI SDK tracing
-- LangChain tracing
-
 ## Docs
 
 For comprehensive documentation, please visit our [docs](https://docs.quotientai.co).
