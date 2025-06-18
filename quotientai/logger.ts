@@ -226,7 +226,7 @@ export class QuotientLogger {
   async log(params: Omit<LogEntry, 'appName' | 'environment'>): Promise<any> {
     // Add deprecation warning
     console.warn(
-      'quotient.logger.log() is deprecated as of 1.0.0 and will be removed in a future version. ' +
+      'quotient.logger.log() is deprecated as of 0.1.0 and will be removed in a future version. ' +
         'Please use quotient.log() instead.'
     );
 
@@ -241,7 +241,7 @@ export class QuotientLogger {
   ): Promise<DetectionResults | null> {
     // Add deprecation warning
     console.warn(
-      'quotient.logger.poll_for_detection() is deprecated as of 1.0.0 and will be removed in a future version. ' +
+      'quotient.logger.poll_for_detection() is deprecated as of 0.1.0 and will be removed in a future version. ' +
         'Please use quotient.poll_for_detections() instead.'
     );
 
