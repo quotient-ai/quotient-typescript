@@ -4,6 +4,7 @@ import { AuthResource } from './resources/auth';
 import { LogsResource } from './resources/logs';
 import { TracingResource } from './tracing';
 import { logError } from './exceptions';
+import { LogEntry, DetectionResults } from './types';
 
 export class QuotientAI {
   public auth: AuthResource = null!;
@@ -49,6 +50,43 @@ export class QuotientAI {
       );
       return;
     }
+  }
+
+  /**
+   * Args:
+   *     user_query: The user's input query
+   *     model_output: The model's response
+   *     documents: Optional list of documents (strings or LogDocument objects)
+   *     message_history: Optional conversation history
+   *     instructions: Optional list of instructions
+   *     tags: Optional tags to attach to the log
+   *     hallucination_detection: Override hallucination detection setting
+   *     inconsistency_detection: Override inconsistency detection setting
+   *
+   * Returns:
+   *     Log ID if successful, None otherwise
+   */
+  async log(params: Omit<LogEntry, 'appName' | 'environment'>): Promise<any> {
+    return this.logger._internalLog(params);
+  }
+
+  /**
+   * Poll for detection results.
+   *
+   * Args:
+   *     log_id: The ID of the log to get detection results for
+   *     timeout: Maximum time to wait for results in seconds (default: 300/5min)
+   *     poll_interval: How often to poll the API in seconds (default: 2s)
+   *
+   * Returns:
+   *     Detection results if successful, None otherwise
+   */
+  async pollForDetections(
+    logId: string,
+    timeout: number = 300,
+    pollInterval: number = 2.0
+  ): Promise<DetectionResults | null> {
+    return this.logger._internalPollForDetection(logId, timeout, pollInterval);
   }
 }
 
