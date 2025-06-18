@@ -165,7 +165,7 @@ export class TracingResource {
 
       this.handleManualInstrumentation();
 
-      this.tracer = trace.getTracer('quotient-tracer', '1.0.0');
+      this.tracer = trace.getTracer('quotient-tracer', '0.1.0');
       this.isConfigured = true;
 
       const instrumentNames = this.instruments.map((i) => i.constructor.name).join(', ');
