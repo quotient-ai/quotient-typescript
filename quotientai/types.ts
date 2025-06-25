@@ -20,20 +20,33 @@ export interface LogDocument {
   metadata?: Record<string, any>;
 }
 
+export enum DetectionType {
+  HALLUCINATION = 'hallucination',
+  DOCUMENT_RELEVANCY = 'document_relevancy',
+}
+
 export interface LogEntry {
   id?: string;
   createdAt?: string | Date;
   appName: string;
   environment: string;
-  userQuery: string;
-  modelOutput: string;
-  documents: (string | LogDocument)[];
+  // Common input parameters (optional, validated based on detection types)
+  userQuery?: string;
+  modelOutput?: string;
+  documents?: (string | LogDocument)[];
   messageHistory?: Array<Record<string, any>> | null;
   instructions?: string[] | null;
   tags?: Record<string, any>;
-  hallucinationDetection: boolean;
+  // New detection parameters (recommended)
+  detections?: DetectionType[];
+  detectionSampleRate?: number;
+  // Deprecated detection parameters
+  /** @deprecated in 0.3.4 - Use detections=[DetectionType.HALLUCINATION] instead */
+  hallucinationDetection?: boolean;
+  /** @deprecated in 0.3.4 - Use detectionSampleRate instead */
   hallucinationDetectionSampleRate?: number;
-  inconsistencyDetection: boolean;
+  /** @deprecated in 0.3.4 - Use detections=[DetectionType.INCONSISTENCY] instead */
+  inconsistencyDetection?: boolean;
 }
 
 export interface LoggerConfig {
@@ -43,8 +56,15 @@ export interface LoggerConfig {
   environment: string;
   tags?: Record<string, any>;
   sampleRate?: number;
+  // New detection parameters (recommended)
+  detections?: DetectionType[];
+  detectionSampleRate?: number;
+  // Deprecated detection parameters
+  /** @deprecated in 0.3.4 - Use detections=[DetectionType.HALLUCINATION] instead */
   hallucinationDetection?: boolean;
+  /** @deprecated in 0.3.4 - Use detections=[DetectionType.INCONSISTENCY] instead */
   inconsistencyDetection?: boolean;
+  /** @deprecated in 0.3.4 - Use detectionSampleRate instead */
   hallucinationDetectionSampleRate?: number;
 }
 
@@ -215,11 +235,15 @@ export interface LogDetail {
   appName: string;
   environment: string;
   tags?: Record<string, any>;
+  // New detection parameters (recommended)
+  detections?: string[];
+  detectionSampleRate?: number;
+  // Deprecated detection parameters
   inconsistencyDetection: boolean;
   hallucinationDetection: boolean;
+  hallucinationDetectionSampleRate: number;
   userQuery: string;
   modelOutput: string;
-  hallucinationDetectionSampleRate: number;
   updatedAt: string;
   status: string;
   hasHallucination: boolean | null;

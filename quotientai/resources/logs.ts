@@ -44,14 +44,19 @@ interface CreateLogParams {
   createdAt?: Date;
   appName: string;
   environment: string;
-  hallucinationDetection: boolean;
-  inconsistencyDetection: boolean;
-  userQuery: string;
-  modelOutput: string;
-  documents: (string | LogDocument)[];
+  // Common input parameters (optional, validated based on detection types)
+  userQuery?: string;
+  modelOutput?: string;
+  documents?: (string | LogDocument)[];
   messageHistory?: any[] | null;
   instructions?: string[] | null;
   tags?: Record<string, any>;
+  // New detection parameters (recommended)
+  detections?: string[];
+  detectionSampleRate?: number;
+  // Deprecated detection parameters (kept for backward compatibility)
+  hallucinationDetection?: boolean;
+  inconsistencyDetection?: boolean;
   hallucinationDetectionSampleRate?: number;
 }
 
@@ -124,18 +129,19 @@ export class LogsResource {
   async create(params: CreateLogParams): Promise<any> {
     try {
       // Convert document objects with pageContent to page_content format for API
-      const convertedDocuments = params.documents.map((doc) => {
-        if (typeof doc === 'string') {
+      const convertedDocuments =
+        params.documents?.map((doc) => {
+          if (typeof doc === 'string') {
+            return doc;
+          } else if (doc && typeof doc === 'object' && 'pageContent' in doc) {
+            const { pageContent, metadata } = doc;
+            return {
+              page_content: pageContent,
+              metadata,
+            };
+          }
           return doc;
-        } else if (doc && typeof doc === 'object' && 'pageContent' in doc) {
-          const { pageContent, metadata } = doc;
-          return {
-            page_content: pageContent,
-            metadata,
-          };
-        }
-        return doc;
-      });
+        }) || [];
 
       // Convert camelCase params to snake_case for API
       const apiParams = {
@@ -143,14 +149,18 @@ export class LogsResource {
         created_at: params.createdAt,
         app_name: params.appName,
         environment: params.environment,
-        hallucination_detection: params.hallucinationDetection,
-        inconsistency_detection: params.inconsistencyDetection,
         user_query: params.userQuery,
         model_output: params.modelOutput,
         documents: convertedDocuments,
         message_history: params.messageHistory,
         instructions: params.instructions,
         tags: params.tags,
+        // New detection parameters (recommended)
+        detections: params.detections,
+        detection_sample_rate: params.detectionSampleRate,
+        // Deprecated detection parameters (kept for backward compatibility)
+        hallucination_detection: params.hallucinationDetection,
+        inconsistency_detection: params.inconsistencyDetection,
         hallucination_detection_sample_rate: params.hallucinationDetectionSampleRate,
       };
 
