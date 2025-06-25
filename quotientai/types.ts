@@ -41,11 +41,11 @@ export interface LogEntry {
   detections?: DetectionType[];
   detectionSampleRate?: number;
   // Deprecated detection parameters
-  /** @deprecated in 0.3.4 - Use detections=[DetectionType.HALLUCINATION] instead */
+  /** @deprecated in 0.0.9 - Use detections=[DetectionType.HALLUCINATION] instead */
   hallucinationDetection?: boolean;
-  /** @deprecated in 0.3.4 - Use detectionSampleRate instead */
+  /** @deprecated in 0.0.9 - Use detectionSampleRate instead */
   hallucinationDetectionSampleRate?: number;
-  /** @deprecated in 0.3.4 - Use detections=[DetectionType.INCONSISTENCY] instead */
+  /** @deprecated in 0.0.9 - Use detections=[DetectionType.INCONSISTENCY] instead */
   inconsistencyDetection?: boolean;
 }
 
@@ -60,11 +60,11 @@ export interface LoggerConfig {
   detections?: DetectionType[];
   detectionSampleRate?: number;
   // Deprecated detection parameters
-  /** @deprecated in 0.3.4 - Use detections=[DetectionType.HALLUCINATION] instead */
+  /** @deprecated in 0.0.9 - Use detections=[DetectionType.HALLUCINATION] instead */
   hallucinationDetection?: boolean;
-  /** @deprecated in 0.3.4 - Use detections=[DetectionType.INCONSISTENCY] instead */
+  /** @deprecated in 0.0.9 - Use detections=[DetectionType.INCONSISTENCY] instead */
   inconsistencyDetection?: boolean;
-  /** @deprecated in 0.3.4 - Use detectionSampleRate instead */
+  /** @deprecated in 0.0.9 - Use detectionSampleRate instead */
   hallucinationDetectionSampleRate?: number;
 }
 

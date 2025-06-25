@@ -35,7 +35,7 @@ const quotientLogger = quotient.logger.init({
 });
 
 // create a log
-const logId = await quotientLogger.log({
+const logId = await quotient.log({
   userQuery: 'How do I cook a goose?',
   modelOutput: 'The capital of France is Paris',
   documents: ['Here is an excellent goose recipe...'],

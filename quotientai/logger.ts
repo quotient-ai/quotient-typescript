@@ -69,6 +69,7 @@ export class QuotientLogger {
             'with new detection parameters (detections, detectionSampleRate) in logger.init(). Please use new detection parameters.'
         )
       );
+      // Don't configure the logger when parameters are mixed incorrectly
       return this;
     }
 
@@ -76,7 +77,7 @@ export class QuotientLogger {
     if (deprecatedDetectionParamsUsed) {
       console.warn(
         'Deprecated parameters (hallucinationDetection, inconsistencyDetection, hallucinationDetectionSampleRate) ' +
-          'are deprecated as of 0.3.4. Please use new detection parameters (detections, detectionSampleRate) instead.'
+          'are deprecated as of 0.0.9. Please use new detection parameters (detections, detectionSampleRate) instead.'
       );
 
       // Convert deprecated to new format
@@ -231,7 +232,7 @@ export class QuotientLogger {
     if (deprecatedDetectionParamsUsed) {
       console.warn(
         'Deprecated parameters (hallucinationDetection, inconsistencyDetection) ' +
-          'are deprecated as of 0.3.4. Please use new detection parameters (detections, detectionSampleRate) instead. Document relevancy is not available with deprecated parameters.'
+          'are deprecated as of 0.0.9. Please use new detection parameters (detections, detectionSampleRate) instead. Document relevancy is not available with deprecated parameters.'
       );
 
       // Convert deprecated to new format

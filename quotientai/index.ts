@@ -61,8 +61,8 @@ export class QuotientAI {
    *     detectionSampleRate: Sample rate for all detections 0-1 (replaces hallucinationDetectionSampleRate)
    *
    *     # Deprecated detection parameters:
-   *     hallucinationDetection: [DEPRECATED in 0.3.4] Use detections=[DetectionType.HALLUCINATION] instead
-   *     inconsistencyDetection: [DEPRECATED in 0.3.4] Use detections=[DetectionType.INCONSISTENCY] instead
+   *     hallucinationDetection: [DEPRECATED in 0.0.9] Use detections=[DetectionType.HALLUCINATION] instead
+   *     inconsistencyDetection: [DEPRECATED in 0.0.9] Use detections=[DetectionType.INCONSISTENCY] instead
    *
    *     # Common input parameters:
    *     userQuery: The user's input query

@@ -30,7 +30,7 @@ async function main() {
   ];
 
   try {
-    const logId = await quotientLogger.log({
+    const logId = await quotient.log({
       userQuery: 'What is the capital of France?',
       modelOutput: 'The capital of France is Paris, which is also the largest city in the country.',
       documents: retrievedDocuments,
@@ -46,9 +46,6 @@ async function main() {
         'You are a helpful assistant that answers questions about geography.',
         'Answer the question accurately based on the provided documents.',
       ],
-      // Can also override detection parameters per log
-      detections: [DetectionType.HALLUCINATION],
-      detectionSampleRate: 1.0,
     });
 
     console.log('Log created with ID:', logId);
