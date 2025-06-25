@@ -41,7 +41,7 @@ interface LogsResponse {
 // CamelCase interface for client-side params, will be converted to snake_case for API
 interface CreateLogParams {
   id?: string;
-  createdAt?: Date;
+  createdAt?: string; // UTC timestamp string (matches Python SDK)
   appName: string;
   environment: string;
   // Common input parameters (optional, validated based on detection types)
@@ -51,13 +51,9 @@ interface CreateLogParams {
   messageHistory?: any[] | null;
   instructions?: string[] | null;
   tags?: Record<string, any>;
-  // New detection parameters (recommended)
+  // Only new detection parameters (deprecated params converted before reaching here)
   detections?: string[];
   detectionSampleRate?: number;
-  // Deprecated detection parameters (kept for backward compatibility)
-  hallucinationDetection?: boolean;
-  inconsistencyDetection?: boolean;
-  hallucinationDetectionSampleRate?: number;
 }
 
 // CamelCase interface for client-side params, will be converted to snake_case for API
@@ -155,13 +151,9 @@ export class LogsResource {
         message_history: params.messageHistory,
         instructions: params.instructions,
         tags: params.tags,
-        // New detection parameters (recommended)
+        // Only new detection parameters (deprecated params converted before reaching here)
         detections: params.detections,
         detection_sample_rate: params.detectionSampleRate,
-        // Deprecated detection parameters (kept for backward compatibility)
-        hallucination_detection: params.hallucinationDetection,
-        inconsistency_detection: params.inconsistencyDetection,
-        hallucination_detection_sample_rate: params.hallucinationDetectionSampleRate,
       };
 
       const response = await this.client.post('/logs', apiParams);

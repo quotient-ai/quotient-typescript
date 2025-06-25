@@ -165,8 +165,8 @@ describe('LogsResource', () => {
     await logsResource.create({
       appName: 'test-app',
       environment: 'development',
-      hallucinationDetection: true,
-      inconsistencyDetection: false,
+      detections: ['hallucination'],
+      detectionSampleRate: 0.5,
       userQuery: 'What is the capital of France?',
       modelOutput: 'Paris is the capital of France.',
       documents: ['doc1', 'doc2'],
@@ -176,14 +176,13 @@ describe('LogsResource', () => {
       ],
       instructions: ['Be concise', 'Be accurate'],
       tags: { user_id: '123' },
-      hallucinationDetectionSampleRate: 0.5,
     });
 
     expect(client.post).toHaveBeenCalledWith('/logs', {
       app_name: 'test-app',
       environment: 'development',
-      hallucination_detection: true,
-      inconsistency_detection: false,
+      detections: ['hallucination'],
+      detection_sample_rate: 0.5,
       user_query: 'What is the capital of France?',
       model_output: 'Paris is the capital of France.',
       documents: ['doc1', 'doc2'],
@@ -193,7 +192,6 @@ describe('LogsResource', () => {
       ],
       instructions: ['Be concise', 'Be accurate'],
       tags: { user_id: '123' },
-      hallucination_detection_sample_rate: 0.5,
     });
   });
 
@@ -206,8 +204,8 @@ describe('LogsResource', () => {
     const result = await logsResource.create({
       appName: 'test-app',
       environment: 'development',
-      hallucinationDetection: true,
-      inconsistencyDetection: false,
+      detections: ['hallucination'],
+      detectionSampleRate: 0.5,
       userQuery: 'What is the capital of France?',
       modelOutput: 'Paris is the capital of France.',
       documents: ['doc1', 'doc2'],
@@ -217,7 +215,6 @@ describe('LogsResource', () => {
       ],
       instructions: ['Be concise', 'Be accurate'],
       tags: { user_id: '123' },
-      hallucinationDetectionSampleRate: 0.5,
     });
 
     expect(result).toBeNull();
@@ -227,8 +224,8 @@ describe('LogsResource', () => {
     expect(client.post).toHaveBeenCalledWith('/logs', {
       app_name: 'test-app',
       environment: 'development',
-      hallucination_detection: true,
-      inconsistency_detection: false,
+      detections: ['hallucination'],
+      detection_sample_rate: 0.5,
       user_query: 'What is the capital of France?',
       model_output: 'Paris is the capital of France.',
       documents: ['doc1', 'doc2'],
@@ -238,7 +235,6 @@ describe('LogsResource', () => {
       ],
       instructions: ['Be concise', 'Be accurate'],
       tags: { user_id: '123' },
-      hallucination_detection_sample_rate: 0.5,
     });
   });
 });

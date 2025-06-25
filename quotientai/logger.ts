@@ -27,11 +27,6 @@ export class QuotientLogger {
   private detections: DetectionType[] = [];
   private detectionSampleRate: number = 0.0;
 
-  // Deprecated detection parameters (kept for backward compatibility)
-  private hallucinationDetection: boolean = false;
-  private inconsistencyDetection: boolean = false;
-  private hallucinationDetectionSampleRate: number = 0.0;
-
   constructor(logsResource: LogsResource) {
     this.logsResource = logsResource;
   }
@@ -115,11 +110,6 @@ export class QuotientLogger {
       logError(new Error('detectionSampleRate must be between 0.0 and 1.0'));
       return this;
     }
-
-    // Keep old properties for backward compatibility with deprecated logger.log()
-    this.hallucinationDetection = this.detections.includes(DetectionType.HALLUCINATION);
-    this.inconsistencyDetection = false; // inconsistencyDetection is deprecated and not supported in v2
-    this.hallucinationDetectionSampleRate = this.detectionSampleRate;
 
     this.configured = true;
 
@@ -250,7 +240,7 @@ export class QuotientLogger {
         detections.push(DetectionType.HALLUCINATION);
       }
 
-      detectionSampleRate = this.hallucinationDetectionSampleRate || 0.0;
+      detectionSampleRate = this.detectionSampleRate || 0.0;
 
       // For backward compatibility, require userQuery and modelOutput
       if (!params.userQuery || !params.modelOutput) {
@@ -326,21 +316,22 @@ export class QuotientLogger {
 
       // generate a random id
       const id = uuidv4();
-      // generate iso string for createdAt
+      // generate UTC timestamp string
       const createdAt = new Date().toISOString();
       await this.logsResource.create({
-        ...params,
         id: id,
         createdAt: createdAt,
         appName: this.appName,
         environment: this.environment,
+        userQuery: params.userQuery,
+        modelOutput: params.modelOutput,
+        documents: params.documents,
+        messageHistory: params.messageHistory,
+        instructions: params.instructions,
         tags: mergedTags,
+        // Only new detection parameters (deprecated params converted above)
         detections: detectionStrings,
         detectionSampleRate: detectionSampleRate,
-        // Keep deprecated fields for backward compatibility with API
-        hallucinationDetection: detections.includes(DetectionType.HALLUCINATION),
-        inconsistencyDetection: false, // inconsistencyDetection is deprecated and not supported in v2
-        hallucinationDetectionSampleRate: detectionSampleRate,
       });
 
       return id;
