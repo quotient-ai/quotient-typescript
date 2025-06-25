@@ -240,6 +240,7 @@ export class LogsResource {
       status: response.log.status,
       hasHallucination: response.log.has_hallucination,
       hasInconsistency: response.log.has_inconsistency,
+      docRelevancyAverage: response.log.doc_relevancy_average,
       documents: response.log.documents,
       messageHistory: response.log.message_history,
       instructions: response.log.instructions,
@@ -256,6 +257,8 @@ export class LogsResource {
           createdAt: doc.created_at,
           updatedAt: doc.updated_at,
           index: doc.index,
+          isRelevant: doc.is_relevant,
+          relevancyReasoning: doc.relevancy_reasoning,
         };
         return documentLog;
       }) || null;
@@ -343,16 +346,18 @@ export class LogsResource {
 
       // Convert full doc context evaluation
       const fullDocEval = evalItem.full_doc_context_evaluation;
-      const fullDocContextEvaluation: FullDocContextEvaluation = {
-        id: fullDocEval.id,
-        evaluationId: fullDocEval.evaluation_id,
-        reasoning: fullDocEval.reasoning,
-        score: fullDocEval.score,
-        index: fullDocEval.index,
-        createdAt: fullDocEval.created_at,
-        updatedAt: fullDocEval.updated_at,
-        logDocumentIds: fullDocEval.log_document_ids,
-      };
+      const fullDocContextEvaluation: FullDocContextEvaluation | null = fullDocEval
+        ? {
+            id: fullDocEval.id,
+            evaluationId: fullDocEval.evaluation_id,
+            reasoning: fullDocEval.reasoning,
+            score: fullDocEval.score,
+            index: fullDocEval.index,
+            createdAt: fullDocEval.created_at,
+            updatedAt: fullDocEval.updated_at,
+            logDocumentIds: fullDocEval.log_document_ids,
+          }
+        : null;
 
       const evaluation: Evaluation = {
         id: evalItem.id,

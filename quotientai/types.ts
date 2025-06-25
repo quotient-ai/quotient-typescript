@@ -127,7 +127,7 @@ export interface EvaluationResponse {
   document_evaluations: DocumentEvaluationResponse[];
   message_history_evaluations: MessageHistoryEvaluationResponse[];
   instruction_evaluations: InstructionEvaluationResponse[];
-  full_doc_context_evaluation: FullDocContextEvaluationResponse;
+  full_doc_context_evaluation: FullDocContextEvaluationResponse | null;
 }
 
 export interface LogDetailResponse {
@@ -145,6 +145,7 @@ export interface LogDetailResponse {
   status: string;
   has_hallucination: boolean | null;
   has_inconsistency: boolean | null;
+  doc_relevancy_average: number | null;
   documents: any[] | null;
   message_history: any[] | null;
   instructions: any[] | null;
@@ -158,6 +159,8 @@ export interface DocumentLogResponse {
   created_at: string;
   updated_at: string;
   index: number;
+  is_relevant: boolean | null;
+  relevancy_reasoning: string | null;
 }
 
 export interface LogMessageHistoryResponse {
@@ -226,7 +229,7 @@ export interface Evaluation {
   documentEvaluations: DocumentEvaluation[];
   messageHistoryEvaluations: MessageHistoryEvaluation[];
   instructionEvaluations: InstructionEvaluation[];
-  fullDocContextEvaluation: FullDocContextEvaluation;
+  fullDocContextEvaluation: FullDocContextEvaluation | null;
 }
 
 export interface LogDetail {
@@ -248,6 +251,7 @@ export interface LogDetail {
   status: string;
   hasHallucination: boolean | null;
   hasInconsistency: boolean | null;
+  docRelevancyAverage: number | null;
   documents: any[] | null;
   messageHistory: any[] | null;
   instructions: any[] | null;
@@ -261,6 +265,8 @@ export interface DocumentLog {
   createdAt: string;
   updatedAt: string;
   index: number;
+  isRelevant: boolean | null;
+  relevancyReasoning: string | null;
 }
 
 export interface LogMessageHistory {

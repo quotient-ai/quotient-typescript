@@ -34,18 +34,22 @@ export class QuotientLogger {
   init(config: LoggerConfig): QuotientLogger {
     if (!config.appName || typeof config.appName !== 'string') {
       logError(new Error('appName must be a non-empty string'));
+      this.configured = false;
       return this;
     }
     if (!config.environment || typeof config.environment !== 'string') {
       logError(new Error('environment must be a non-empty string'));
+      this.configured = false;
       return this;
     }
     if (config.tags && typeof config.tags !== 'object') {
       logError(new Error('tags must be a dictionary'));
+      this.configured = false;
       return this;
     }
     if (config.sampleRate && typeof config.sampleRate !== 'number') {
       logError(new Error('sampleRate must be a number'));
+      this.configured = false;
       return this;
     }
 
@@ -69,7 +73,8 @@ export class QuotientLogger {
             'with new detection parameters (detections, detectionSampleRate) in logger.init(). Please use new detection parameters.'
         )
       );
-      // Don't configure the logger when parameters are mixed incorrectly
+      // Explicitly set configured to false and return early to prevent any further configuration
+      this.configured = false;
       return this;
     }
 
@@ -104,11 +109,13 @@ export class QuotientLogger {
 
     if (this.sampleRate < 0 || this.sampleRate > 1) {
       logError(new Error('sampleRate must be between 0.0 and 1.0'));
+      this.configured = false;
       return this;
     }
 
     if (this.detectionSampleRate < 0 || this.detectionSampleRate > 1) {
       logError(new Error('detectionSampleRate must be between 0.0 and 1.0'));
+      this.configured = false;
       return this;
     }
 
@@ -394,7 +401,6 @@ export class QuotientLogger {
         await new Promise((resolve) => setTimeout(resolve, currentPollInterval));
       }
     }
-
     logError(new Error(`Timed out waiting for detection results after ${timeout} seconds`));
     return null;
   }

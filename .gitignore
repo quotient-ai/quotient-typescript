@@ -27,5 +27,5 @@ coverage/
 logs/
 *.log
 
-# Comprehensive testing examples (contain API keys)
+# Comprehensive testing examples internal use only
 examples/comprehensive-testing.ts 
