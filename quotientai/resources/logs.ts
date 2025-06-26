@@ -41,7 +41,7 @@ interface LogsResponse {
 // CamelCase interface for client-side params, will be converted to snake_case for API
 interface CreateLogParams {
   id?: string;
-  createdAt?: string; // UTC timestamp string (matches Python SDK)
+  createdAt?: string;
   appName: string;
   environment: string;
   // Common input parameters (optional, validated based on detection types)
