@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { QuotientLogger } from '../quotientai/logger';
+import { DetectionType } from '../quotientai/types';
 
 describe('QuotientLogger', () => {
   let consoleErrorSpy: any;
@@ -61,7 +62,7 @@ describe('QuotientLogger', () => {
     expect(privateLogger.tags).toEqual({ test: 'test' });
     expect(privateLogger.sampleRate).toBe(0.5);
     // Deprecated parameters are converted to new format internally
-    expect(privateLogger.detections).toEqual(['hallucination']);
+    expect(privateLogger.detections).toEqual([DetectionType.HALLUCINATION]);
     expect(privateLogger.detectionSampleRate).toBe(0.5);
     expect(privateLogger.configured).toBe(true);
   });
