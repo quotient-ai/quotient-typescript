@@ -1,4 +1,4 @@
-import { QuotientAI, DetectionType } from '../quotientai/index';
+import { QuotientAI, DetectionType } from 'quotientai';
 
 async function main() {
   const quotient = new QuotientAI();
