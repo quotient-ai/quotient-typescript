@@ -1,17 +1,17 @@
-import { QuotientAI } from 'quotientai';
+import { QuotientAI, DetectionType } from 'quotientai';
 
 async function main() {
   const quotient = new QuotientAI();
   console.log('QuotientAI client initialized');
 
   // configure the logger
-  const quotientLogger = quotient.logger.init({
+  quotient.logger.init({
     appName: 'my-app',
     environment: 'dev',
     sampleRate: 1.0,
     tags: { model: 'gpt-4o', feature: 'customer-support' },
-    hallucinationDetection: true,
-    hallucinationDetectionSampleRate: 1.0,
+    detections: [DetectionType.HALLUCINATION, DetectionType.DOCUMENT_RELEVANCY],
+    detectionSampleRate: 1.0,
   });
 
   console.log('Logger initialized');
@@ -38,13 +38,11 @@ async function main() {
         'You are a helpful assistant that answers questions about the world.',
         "Answer the question in a concise manner. If you are not sure, say 'I don't know'.",
       ],
-      hallucinationDetection: true,
-      inconsistencyDetection: true,
     });
     console.log('pollForDetections with logId: ', logId);
 
     // poll for the detection results
-    const detectionResults = await quotientLogger.pollForDetections(logId);
+    const detectionResults = await quotientLogger.pollForDetection(logId);
     console.log('detectionResults', detectionResults);
   } catch (error) {
     console.error(error);

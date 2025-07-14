@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { QuotientLogger } from '../quotientai/logger';
+import { DetectionType } from '../quotientai/types';
 
 describe('QuotientLogger', () => {
   let consoleErrorSpy: any;
@@ -20,9 +21,8 @@ describe('QuotientLogger', () => {
     expect(privateLogger.configured).toBe(false);
     expect(privateLogger.sampleRate).toBe(1.0);
     expect(privateLogger.tags).toEqual({});
-    expect(privateLogger.hallucinationDetection).toBe(false);
-    expect(privateLogger.inconsistencyDetection).toBe(false);
-    expect(privateLogger.hallucinationDetectionSampleRate).toBe(0.0);
+    expect(privateLogger.detections).toEqual([]);
+    expect(privateLogger.detectionSampleRate).toBe(0.0);
   });
 
   it('should use default values when not provided', () => {
@@ -39,9 +39,8 @@ describe('QuotientLogger', () => {
     expect(privateLogger.appName).toBe('test_app');
     expect(privateLogger.environment).toBe('test_environment');
     expect(privateLogger.tags).toEqual({});
-    expect(privateLogger.hallucinationDetection).toBe(false);
-    expect(privateLogger.inconsistencyDetection).toBe(false);
-    expect(privateLogger.hallucinationDetectionSampleRate).toBe(0.0);
+    expect(privateLogger.detections).toEqual([]);
+    expect(privateLogger.detectionSampleRate).toBe(0.0);
   });
 
   it('should initialize with the correct properties', () => {
@@ -62,9 +61,9 @@ describe('QuotientLogger', () => {
     expect(privateLogger.environment).toBe('test_environment');
     expect(privateLogger.tags).toEqual({ test: 'test' });
     expect(privateLogger.sampleRate).toBe(0.5);
-    expect(privateLogger.hallucinationDetection).toBe(true);
-    expect(privateLogger.inconsistencyDetection).toBe(true);
-    expect(privateLogger.hallucinationDetectionSampleRate).toBe(0.5);
+    // Deprecated parameters are converted to new format internally
+    expect(privateLogger.detections).toEqual([DetectionType.HALLUCINATION]);
+    expect(privateLogger.detectionSampleRate).toBe(0.5);
     expect(privateLogger.configured).toBe(true);
   });
 
@@ -72,7 +71,7 @@ describe('QuotientLogger', () => {
     const mockLogsResource = { create: vi.fn(), list: vi.fn(), getDetections: vi.fn() };
     const logger = new QuotientLogger(mockLogsResource);
     const privateLogger = logger as any;
-    const result = privateLogger.init({ sampleRate: 1.5 });
+    const result = privateLogger.init({ appName: 'test', environment: 'test', sampleRate: 1.5 });
     expect(result).toBe(logger);
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       expect.stringContaining('sampleRate must be between 0.0 and 1.0')
@@ -101,16 +100,16 @@ describe('QuotientLogger', () => {
       tags: { test: 'test' },
       sampleRate: 1.0,
     });
-    await privateLogger.log({ message: 'test' });
+    await privateLogger.log({ userQuery: 'test query', modelOutput: 'test response' });
     expect(mockLogsResource.create).toHaveBeenCalledWith(
       expect.objectContaining({
         appName: 'test_app',
         environment: 'test_environment',
         tags: { test: 'test' },
-        message: 'test',
-        hallucinationDetection: false,
-        hallucinationDetectionSampleRate: 0,
-        inconsistencyDetection: false,
+        userQuery: 'test query',
+        modelOutput: 'test response',
+        detections: [],
+        detectionSampleRate: 0.0,
       })
     );
   });
@@ -136,7 +135,7 @@ describe('QuotientLogger', () => {
     const mockLogsResource = { create: vi.fn(), list: vi.fn(), getDetections: vi.fn() };
     const logger = new QuotientLogger(mockLogsResource);
     const privateLogger = logger as any;
-    privateLogger.init({ sampleRate: 0.5 });
+    privateLogger.init({ appName: 'test', environment: 'test', sampleRate: 0.5 });
 
     // Test when random is less than sample rate
     vi.spyOn(Math, 'random').mockReturnValue(0.4);

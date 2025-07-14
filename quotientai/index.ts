@@ -53,18 +53,27 @@ export class QuotientAI {
   }
 
   /**
+   * Log the model interaction.
+   *
    * Args:
-   *     user_query: The user's input query
-   *     model_output: The model's response
+   *     # New detection parameters (recommended):
+   *     detections: List of detection types to run (replaces hallucinationDetection/inconsistencyDetection)
+   *     detectionSampleRate: Sample rate for all detections 0-1 (replaces hallucinationDetectionSampleRate)
+   *
+   *     # Deprecated detection parameters:
+   *     hallucinationDetection: [DEPRECATED in 0.0.9] Use detections=[DetectionType.HALLUCINATION] instead
+   *     inconsistencyDetection: [DEPRECATED in 0.0.9] Use detections=[DetectionType.INCONSISTENCY] instead
+   *
+   *     # Common input parameters:
+   *     userQuery: The user's input query
+   *     modelOutput: The model's response
    *     documents: Optional list of documents (strings or LogDocument objects)
-   *     message_history: Optional conversation history
+   *     messageHistory: Optional conversation history
    *     instructions: Optional list of instructions
    *     tags: Optional tags to attach to the log
-   *     hallucination_detection: Override hallucination detection setting
-   *     inconsistency_detection: Override inconsistency detection setting
    *
    * Returns:
-   *     Log ID if successful, None otherwise
+   *     Log ID if successful, null otherwise
    */
   async log(params: Omit<LogEntry, 'appName' | 'environment'>): Promise<any> {
     return this.logger._internalLog(params);
@@ -92,3 +101,4 @@ export class QuotientAI {
 
 // Export types that users need
 export { TracingConfig } from './tracing';
+export { DetectionType } from './types';

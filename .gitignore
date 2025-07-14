@@ -25,4 +25,7 @@ coverage/
 
 # Logs
 logs/
-*.log 
+*.log
+
+# Comprehensive testing examples internal use only
+examples/comprehensive-testing.ts 

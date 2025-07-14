@@ -41,18 +41,19 @@ interface LogsResponse {
 // CamelCase interface for client-side params, will be converted to snake_case for API
 interface CreateLogParams {
   id?: string;
-  createdAt?: Date;
+  createdAt?: string;
   appName: string;
   environment: string;
-  hallucinationDetection: boolean;
-  inconsistencyDetection: boolean;
-  userQuery: string;
-  modelOutput: string;
-  documents: (string | LogDocument)[];
+  // Common input parameters (optional, validated based on detection types)
+  userQuery?: string;
+  modelOutput?: string;
+  documents?: (string | LogDocument)[];
   messageHistory?: any[] | null;
   instructions?: string[] | null;
   tags?: Record<string, any>;
-  hallucinationDetectionSampleRate?: number;
+  // Only new detection parameters (deprecated params converted before reaching here)
+  detections?: string[];
+  detectionSampleRate?: number;
 }
 
 // CamelCase interface for client-side params, will be converted to snake_case for API
@@ -124,18 +125,19 @@ export class LogsResource {
   async create(params: CreateLogParams): Promise<any> {
     try {
       // Convert document objects with pageContent to page_content format for API
-      const convertedDocuments = params.documents.map((doc) => {
-        if (typeof doc === 'string') {
+      const convertedDocuments =
+        params.documents?.map((doc) => {
+          if (typeof doc === 'string') {
+            return doc;
+          } else if (doc && typeof doc === 'object' && 'pageContent' in doc) {
+            const { pageContent, metadata } = doc;
+            return {
+              page_content: pageContent,
+              metadata,
+            };
+          }
           return doc;
-        } else if (doc && typeof doc === 'object' && 'pageContent' in doc) {
-          const { pageContent, metadata } = doc;
-          return {
-            page_content: pageContent,
-            metadata,
-          };
-        }
-        return doc;
-      });
+        }) || [];
 
       // Convert camelCase params to snake_case for API
       const apiParams = {
@@ -143,15 +145,15 @@ export class LogsResource {
         created_at: params.createdAt,
         app_name: params.appName,
         environment: params.environment,
-        hallucination_detection: params.hallucinationDetection,
-        inconsistency_detection: params.inconsistencyDetection,
         user_query: params.userQuery,
         model_output: params.modelOutput,
         documents: convertedDocuments,
         message_history: params.messageHistory,
         instructions: params.instructions,
         tags: params.tags,
-        hallucination_detection_sample_rate: params.hallucinationDetectionSampleRate,
+        // Only new detection parameters (deprecated params converted before reaching here)
+        detections: params.detections,
+        detection_sample_rate: params.detectionSampleRate,
       };
 
       const response = await this.client.post('/logs', apiParams);
@@ -238,6 +240,7 @@ export class LogsResource {
       status: response.log.status,
       hasHallucination: response.log.has_hallucination,
       hasInconsistency: response.log.has_inconsistency,
+      docRelevancyAverage: response.log.doc_relevancy_average,
       documents: response.log.documents,
       messageHistory: response.log.message_history,
       instructions: response.log.instructions,
@@ -254,6 +257,8 @@ export class LogsResource {
           createdAt: doc.created_at,
           updatedAt: doc.updated_at,
           index: doc.index,
+          isRelevant: doc.is_relevant,
+          relevancyReasoning: doc.relevancy_reasoning,
         };
         return documentLog;
       }) || null;
@@ -341,16 +346,18 @@ export class LogsResource {
 
       // Convert full doc context evaluation
       const fullDocEval = evalItem.full_doc_context_evaluation;
-      const fullDocContextEvaluation: FullDocContextEvaluation = {
-        id: fullDocEval.id,
-        evaluationId: fullDocEval.evaluation_id,
-        reasoning: fullDocEval.reasoning,
-        score: fullDocEval.score,
-        index: fullDocEval.index,
-        createdAt: fullDocEval.created_at,
-        updatedAt: fullDocEval.updated_at,
-        logDocumentIds: fullDocEval.log_document_ids,
-      };
+      const fullDocContextEvaluation: FullDocContextEvaluation | null = fullDocEval
+        ? {
+            id: fullDocEval.id,
+            evaluationId: fullDocEval.evaluation_id,
+            reasoning: fullDocEval.reasoning,
+            score: fullDocEval.score,
+            index: fullDocEval.index,
+            createdAt: fullDocEval.created_at,
+            updatedAt: fullDocEval.updated_at,
+            logDocumentIds: fullDocEval.log_document_ids,
+          }
+        : null;
 
       const evaluation: Evaluation = {
         id: evalItem.id,
