@@ -25,7 +25,7 @@ async function main() {
 
   console.log('Preparing to log with quotient_logger');
   try {
-    const logId = await quotientLogger.log({
+    const logId = await quotient.log({
       userQuery: 'How do I cook a test?',
       modelOutput: 'The capital of France is Paris',
       documents: retrievedDocuments,
@@ -39,11 +39,7 @@ async function main() {
         "Answer the question in a concise manner. If you are not sure, say 'I don't know'.",
       ],
     });
-    console.log('pollForDetections with logId: ', logId);
-
-    // poll for the detection results
-    const detectionResults = await quotientLogger.pollForDetection(logId);
-    console.log('detectionResults', detectionResults);
+    console.log('logged with logId: ', logId);
   } catch (error) {
     console.error(error);
   }
