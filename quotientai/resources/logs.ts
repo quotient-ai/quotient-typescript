@@ -160,7 +160,7 @@ export class LogsResource {
       return response;
     } catch (error) {
       logError(error as Error, 'LogsResource.create');
-      return null;
+      throw error;
     }
   }
 
